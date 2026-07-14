@@ -1,0 +1,26 @@
+body { overflow: hidden; padding:0; margin:0; font-family: sans-serif; background-color:lightgray; vertical-align:middle; }
+
+.diapo_start { position:absolute; visibility:visible; display:block; width:100vw; height:100vh; }
+.diapo_page { position:absolute; visibility:hidden; display:none; width:100vw; height:100vh; }
+
+.diapo_range { position:absolute; right:10%; top:60%; width:88%; height:27%; overflow:auto; background-color: transparent; font-size:4vh; padding:10px; text-align:right; }
+
+.diapo_compo { position:absolute; left:0; top:5%; width:100%; background-color:white; font-size:7vh; padding:10px; height:6vh; }
+.diapo_order { position:absolute; left:0; top:20%; background-color: transparent; font-size:6vh; padding:10px; }
+.diapo_title { position:absolute; left:10%; top:30%; width:88%; height:10%; overflow:auto;  background-color: transparent; font-size:6vh; padding:10px; }
+.diapo_authors { position:absolute; left:10%; top:45%; width:88%; height:10%; overflow:auto;  background-color: transparent; font-size:5vh; padding:10px; }
+.diapo_comments { position:absolute; left:10%; top:60%; width:88%; height:27%; overflow:auto; background-color: transparent; font-size:3vh; padding:10px; }
+
+.diapo_hub { position:absolute; bottom:7px; left:7px; white-space: nowrap; }
+.diapo_bouton { position:relative; height:30px; border:1px solid black; border-radius:5px; background-color:transparent; display:inline; padding:4px 8px; font-size:16px; }
+.diapo_warning { position:relative; height:30px; border:1px solid black; border-radius:5px; display:inline; padding:4px 8px; font-size:16px; white-space: nowrap; }
+.diapo_alert { position:relative; height:30px; border:1px solid black; border-radius:5px; background-color:red; color:white; display:inline; padding:4px 8px; font-size:16px; white-space: nowrap; }
+
+.diapo_image_container { position:absolute; left:0; top:0; visibility:hidden; display:none; }
+.diapo_image_content { position:relative; left:0; top:0; background-color:black; width:100vw; height:100vh; }
+.diapo_image { position:absolute; left:0; top:0; width:100%; max-height:100vh; display:block; }
+
+.diapo_audio_container { position:absolute; bottom:10px; right:10px; visibility:hidden; display:none; }
+.diapo_video_container { position:absolute; bottom:10px; right:10px; visibility:hidden; display:none; }
+
+.faded { opacity: 0.5; }

@@ -1,0 +1,19 @@
+body { overflow: hidden; padding:0; margin:0; font-family: sans-serif; background-color:lightgray; vertical-align:middle; }
+
+.ranking_page { position:absolute; visibility:visible; display:block; width:100vw; height:100vh; }
+
+.ranking_compo { position:absolute; left:0; top:5%; width:100%; background-color:white; font-size:7vh; padding:10px; height:6vh; }
+
+.ranking_list { position:absolute; right:1%; top:15%; width:95vw; }
+.ranking_item { visibility:hidden; display:none; position:relative; margin:2px; border:1px solid gray; width:100%; padding:5px; background-color:white; }
+
+.ranking_order { font-size:4vh; }
+.ranking_title { font-size:5vh; }
+.ranking_authors { font-size:3vh; }
+.ranking_plateform { font-size:3vh; }
+.ranking_points { font-size:3vh; }
+
+.ranking_hub { position:absolute; bottom:7px; right:7px; white-space: nowrap; }
+.ranking_bouton { position:relative; height:30px; border:1px solid black; border-radius:5px; background-color:transparent; display:inline; padding:4px 8px; font-size:16px; }
+
+.faded { opacity: 0.5; }
