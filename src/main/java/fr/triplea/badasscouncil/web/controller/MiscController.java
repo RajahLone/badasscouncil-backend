@@ -11,8 +11,8 @@ import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.MessagesTransfer;
 
 @RestController
-@RequestMapping("/divers")
-public class DiversController 
+@RequestMapping("/misc")
+public class MiscController 
 {
 
   @Autowired
@@ -23,10 +23,10 @@ public class DiversController
   { 
     MessagesTransfer mt = new MessagesTransfer();
 
-    mt.setErreur(variableRepository.findByTypeAndCode("Messages", "ACCUEIL_ERREUR"));
-    mt.setAlerte(variableRepository.findByTypeAndCode("Messages", "ACCUEIL_ALERTE"));
-    mt.setInformation(variableRepository.findByTypeAndCode("Messages", "ACCUEIL_INFORMATION"));
-    mt.setAutre(variableRepository.findByTypeAndCode("Messages", "ACCUEIL_AUTRE"));
+    mt.setErreur(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_ERREUR"));
+    mt.setAlerte(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_ALERTE"));
+    mt.setInformation(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_INFORMATION"));
+    mt.setAutre(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_AUTRE"));
     
     return ResponseEntity.ok(mt); 
   }

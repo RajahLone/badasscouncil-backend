@@ -3,7 +3,7 @@ package fr.triplea.badasscouncil.model;
 public enum UserStatus 
 {
   
-  ACTIVE("Active"), LOCKED("Locked"), BANNED("Banned"), SLEEPING("Sleeping");
+  ACTIVE("Active"), PENDING("Pending"), LOCKED("Locked"), BANNED("Banned"), SLEEPING("Sleeping");
 
   private String status;
 

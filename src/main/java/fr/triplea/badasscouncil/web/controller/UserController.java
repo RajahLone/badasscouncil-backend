@@ -75,7 +75,7 @@ public class UserController
   { 
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     
-    if (pageSize == 0) { try { pageSize = Integer.parseInt(variableRepository.findByTypeAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { pageSize = null; } }
+    if (pageSize == 0) { try { pageSize = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { pageSize = null; } }
     
     if ((pageSize == null) || (pageSize == 0)) { pageNumber = 0; }
     
@@ -105,7 +105,7 @@ public class UserController
     
     int nombreParPage = 100;
     
-    try { nombreParPage = Integer.parseInt(variableRepository.findByTypeAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { nombreParPage = 100; }
+    try { nombreParPage = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { nombreParPage = 100; }
 
     int nombreElements = userRepository.count(nameFilter, statusFilter);
      
@@ -148,7 +148,8 @@ public class UserController
       p.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
       p.setUserId(found.getId());
  
-      if (found.getStatus().equals(UserStatus.LOCKED)) { p.setStatus("LOCKED"); }
+      if (found.getStatus().equals(UserStatus.PENDING)) { p.setStatus("PENDING"); }
+      else if (found.getStatus().equals(UserStatus.LOCKED)) { p.setStatus("LOCKED"); }
       else if (found.getStatus().equals(UserStatus.BANNED)) { p.setStatus("BANNED"); }
       else if (found.getStatus().equals(UserStatus.SLEEPING)) { p.setStatus("SLEEPING"); }
       else { p.setStatus("ACTIVE"); }
@@ -202,9 +203,10 @@ public class UserController
           found.setRoles(found.getRoles());
           found.setEnabled(true);
           
-          if (user.getStatus().equals("LOCKED")) { found.setStatus(UserStatus.LOCKED); }
-          else if(user.getStatus().equals("BANNED")) { found.setStatus(UserStatus.BANNED); }
-          else if(user.getStatus().equals("SLEEPING")) { found.setStatus(UserStatus.SLEEPING); }
+          if (user.getStatus().equals("PENDING")) { found.setStatus(UserStatus.PENDING); }
+          else if (user.getStatus().equals("LOCKED")) { found.setStatus(UserStatus.LOCKED); }
+          else if (user.getStatus().equals("BANNED")) { found.setStatus(UserStatus.BANNED); }
+          else if (user.getStatus().equals("SLEEPING")) { found.setStatus(UserStatus.SLEEPING); }
           else { found.setStatus(UserStatus.ACTIVE); }
 
           found.setSubscribeMotive(user.getSubscribeMotive());
@@ -283,9 +285,10 @@ public class UserController
       found.setRoles(found.getRoles());
       found.setEnabled(true);
       
-      if (user.getStatus().equals("LOCKED")) { found.setStatus(UserStatus.LOCKED); }
-      else if(user.getStatus().equals("BANNED")) { found.setStatus(UserStatus.BANNED); }
-      else if(user.getStatus().equals("SLEEPING")) { found.setStatus(UserStatus.SLEEPING); }
+      if (user.getStatus().equals("PENDING")) { found.setStatus(UserStatus.PENDING); }
+      else if (user.getStatus().equals("LOCKED")) { found.setStatus(UserStatus.LOCKED); }
+      else if (user.getStatus().equals("BANNED")) { found.setStatus(UserStatus.BANNED); }
+      else if (user.getStatus().equals("SLEEPING")) { found.setStatus(UserStatus.SLEEPING); }
       else { found.setStatus(UserStatus.ACTIVE); }
 
       found.setSubscribeMotive(user.getSubscribeMotive());

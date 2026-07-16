@@ -107,10 +107,9 @@ public class SecurityConfig
         .redirectToHttps(withDefaults())
         .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
-          .requestMatchers("/divers/**", "/sign/**", "/webcam/**", "/evenement/**").permitAll()
-          .requestMatchers("/account/**", "/preference/**", "/message/**", "/urne/**", "/resultats/**").hasRole("USER")
-          .requestMatchers("/variable/**", "/categorie/**", "/production/**", "/presentation/**").hasRole("ADMIN")
-          .requestMatchers("/participant/**").hasRole("REGUL")
+          .requestMatchers("/divers/**", "/sign/**").permitAll()
+          .requestMatchers("/account/**", "/preference/**", "/message/**").hasRole("USER")
+          .requestMatchers("/variable/**", "/user/**").hasRole("ADMIN")
           .anyRequest().authenticated()
           )
         .addFilterBefore(jwtTokenFilter(), upaf_clazz)

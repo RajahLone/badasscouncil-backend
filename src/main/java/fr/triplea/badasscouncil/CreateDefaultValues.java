@@ -119,7 +119,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   @Transactional
   public void addVariableIfMissing(final String type, final String code, final String valeur) 
   {
-    String str = variableRepository.findByTypeAndCode(type, code);
+    String str = variableRepository.findByFamilyAndCode(type, code);
     
     if (str == null) 
     { 

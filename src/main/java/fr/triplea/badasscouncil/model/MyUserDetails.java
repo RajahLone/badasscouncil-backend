@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class MyUserDetails implements UserDetails 
 {
 
-  private static final long serialVersionUID = -2662964904357800987L;
+  private static final long serialVersionUID = 412651939994126772L;
 
   @Autowired
   @JsonIgnore

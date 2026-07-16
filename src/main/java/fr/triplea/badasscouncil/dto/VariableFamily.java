@@ -1,6 +1,6 @@
 package fr.triplea.badasscouncil.dto;
 
-public record VariableTypeOptionList
+public record VariableFamily
 (
   String type
 )

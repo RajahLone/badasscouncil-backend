@@ -21,7 +21,7 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.MessagesTransfer;
-import fr.triplea.badasscouncil.dto.VariableTypeOptionList;
+import fr.triplea.badasscouncil.dto.VariableFamily;
 import fr.triplea.badasscouncil.model.Variable;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -41,16 +41,16 @@ public class VariableController
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<Variable> getList(@RequestParam(required = false) String type) 
+  public List<Variable> getList(@RequestParam(required = false) String family) 
   { 
-    if (type != null) { if (type.isBlank()) { type = null; } }
+    if (family != null) { if (family.isBlank()) { family = null; } }
  
-    return variableRepository.findByType(type); 
+    return variableRepository.findByFamily(family); 
   }
   
   @GetMapping(value = "/option-list")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<VariableTypeOptionList> getOptionList() 
+  public List<VariableFamily> getOptionList() 
   { 
     return variableRepository.getTypes(); 
   }

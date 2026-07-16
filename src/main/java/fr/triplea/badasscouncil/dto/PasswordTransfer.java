@@ -7,6 +7,7 @@ public class PasswordTransfer
   private String oldPassword;
   private String newPassword;
   private String error;
+  private String success;
 
   public PasswordTransfer() {}
 
@@ -21,6 +22,9 @@ public class PasswordTransfer
   
   public void setError(String s) { this.error = s; }
   public String getError() { return this.error; }
+  
+  public void setSuccess(String s) { this.success = s; }
+  public String getSuccess() { return this.success; }
 
   @Override
   public String toString() 
