@@ -229,12 +229,12 @@ public class UserController
           found.setPhone(user.getPhone());
           found.setEmail(user.getEmail());
          
-          Role userRole = roleRepository.findByLibelle("ROLE_USER");
+          Role userRole = roleRepository.findByLabel("ROLE_USER");
 
           if (authentication != null)
           {
-            Role adminRole = roleRepository.findByLibelle("ROLE_ADMIN");
-            Role regulRole = roleRepository.findByLibelle("ROLE_REGUL");
+            Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
+            Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
            
             if ((adminRole != null) && (regulRole != null) && (userRole != null))
             {
@@ -311,12 +311,12 @@ public class UserController
       found.setPhone(user.getPhone());
       found.setEmail(user.getEmail());
       
-      Role userRole = roleRepository.findByLibelle("ROLE_USER");
+      Role userRole = roleRepository.findByLabel("ROLE_USER");
 
       if (authentication != null)
       {
-        Role adminRole = roleRepository.findByLibelle("ROLE_ADMIN");
-        Role regulRole = roleRepository.findByLibelle("ROLE_REGUL");
+        Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
+        Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
        
         if ((adminRole != null) && (regulRole != null) && (userRole != null))
         {

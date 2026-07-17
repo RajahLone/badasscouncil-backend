@@ -23,10 +23,10 @@ public class MiscController
   { 
     MessagesTransfer mt = new MessagesTransfer();
 
-    mt.setErreur(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_ERREUR"));
-    mt.setAlerte(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_ALERTE"));
-    mt.setInformation(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_INFORMATION"));
-    mt.setAutre(variableRepository.findByFamilyAndCode("Messages", "ACCUEIL_AUTRE"));
+    mt.setError(variableRepository.findByFamilyAndCode("Messages", "HOME_ERROR"));
+    mt.setAlerte(variableRepository.findByFamilyAndCode("Messages", "HOME_WARN"));
+    mt.setInformation(variableRepository.findByFamilyAndCode("Messages", "HOME_INFO"));
+    mt.setMiscellaneous(variableRepository.findByFamilyAndCode("Messages", "HOME_MISC"));
     
     return ResponseEntity.ok(mt); 
   }

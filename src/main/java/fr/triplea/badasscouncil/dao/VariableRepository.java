@@ -13,19 +13,19 @@ import fr.triplea.badasscouncil.model.Variable;
 public interface VariableRepository extends JpaRepository<Variable, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v ORDER BY v.type ASC, v.code ASC ")
+  @NativeQuery("SELECT DISTINCT v.* FROM badasscouncil.variables AS v ORDER BY v.family ASC, v.code ASC ")
   List<Variable> findAll();
   
-  @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE v.numero_variable = :id ")
+  @NativeQuery("SELECT DISTINCT v.* FROM badasscouncil.variables AS v WHERE v.variableId = :id ")
   Variable findById(@Param("id") int id);
 
-  @NativeQuery("SELECT DISTINCT v.* FROM vote.variables AS v WHERE ((:type IS NULL) OR (v.type = :type)) ORDER BY v.type ASC, v.code ASC ")
-  List<Variable> findByFamily(@Param("type") String type);
+  @NativeQuery("SELECT DISTINCT v.* FROM badasscouncil.variables AS v WHERE ((:family IS NULL) OR (v.family = :family)) ORDER BY v.family ASC, v.code ASC ")
+  List<Variable> findByFamily(@Param("family") String family);
 
-  @NativeQuery("SELECT DISTINCT v.valeur FROM vote.variables AS v WHERE v.type = :type AND v.code = :code ")
-  String findByFamilyAndCode(@Param("type") String type, @Param("code") String code);
+  @NativeQuery("SELECT DISTINCT v.content FROM badasscouncil.variables AS v WHERE v.family = :family AND v.code = :code ")
+  String findByFamilyAndCode(@Param("family") String family, @Param("code") String code);
 
-  @NativeQuery("SELECT DISTINCT v.type FROM vote.variables AS v ORDER BY v.type ASC ")
-  List<VariableFamily> getTypes();
+  @NativeQuery("SELECT DISTINCT v.family FROM badasscouncil.variables AS v ORDER BY v.family ASC ")
+  List<VariableFamily> getFamilies();
   
 }

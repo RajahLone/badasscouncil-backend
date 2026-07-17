@@ -12,10 +12,10 @@ import fr.triplea.badasscouncil.model.Preference;
 public interface PreferenceRepository extends JpaRepository<Preference, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT p.* FROM vote.preferences AS p WHERE p.numero_preference = :id ")
+  @NativeQuery("SELECT DISTINCT p.* FROM badasscouncil.preferences AS p WHERE p.preferenceId = :id ")
   Preference findById(@Param("id") int id);
 
-  @NativeQuery("SELECT DISTINCT p.* FROM vote.preferences AS p WHERE p.numero_participant = :participant AND p.numero_traitement = :traitement ")
-  List<Preference> findByParticipantAndTraitement(@Param("participant") User participant, @Param("numTtt") int traitement);
+  @NativeQuery("SELECT DISTINCT p.* FROM badasscouncil.preferences AS p WHERE p.userId = :user AND p.action_id = :action ")
+  List<Preference> findByParticipantAndTraitement(@Param("user") User user, @Param("action") int action);
 
 }

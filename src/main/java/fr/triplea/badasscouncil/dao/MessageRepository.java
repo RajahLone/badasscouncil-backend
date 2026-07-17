@@ -13,19 +13,20 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
 {
 
   @NativeQuery("SELECT DISTINCT "
-             + "  TO_CHAR(m.date_creation, 'DD/MM/YYYY HH24:MI:SS') as date_creation, "
-             + "  m.numero_message, "
-             + "  p.pseudonyme, "
-             + "  m.ligne, "
-             + "  CASE WHEN m.numero_destinataire IS NULL THEN 0 ELSE m.numero_destinataire END AS numero_destinataire, "
-             + "  CASE WHEN m.numero_destinataire IS NULL THEN '' ELSE d.pseudonyme END AS pseudo_destinataire "
-             + "FROM vote.messages AS m "
-             + "INNER JOIN vote.participants AS p ON m.numero_participant = p.numero_participant "
-             + "LEFT JOIN vote.participants AS d ON m.numero_destinataire = d.numero_participant "
+             + "  TO_CHAR(m.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
+             + "  m.message_id, "
+             + "  p.nick_name, "
+             + "  m.content, "
+             + "  CASE WHEN m.dest_id IS NULL THEN 0 ELSE m.dest_id END AS dest_id, "
+             + "  CASE WHEN m.dest_id IS NULL THEN '' ELSE d.nick_name END AS dest_name "
+             + "FROM badasscouncil.messages AS m "
+             + "INNER JOIN badasscouncil.users AS p ON m.user_id = p.user_id "
+             + "LEFT JOIN badasscouncil.users AS d ON m.dest_id = d.user_id "
              + "WHERE "
-             + "     (m.numero_message > :last) "
-             + " AND ((m.numero_destinataire = :participant) OR (m.numero_participant = :participant) OR (m.numero_destinataire IS NULL)) "
-             + "ORDER BY m.numero_message DESC ")
-  List<MessageShort> findNew(@Param("participant") int participant, @Param("last") int last);
+             + "     (m.room_id = :room) "
+             + " AND (m.numero_message > :last) "
+             + " AND ((m.dest_id = :user) OR (m.user_id = :user) OR (m.dest_id IS NULL)) "
+             + "ORDER BY m.message_id DESC ")
+  List<MessageShort> findNew(@Param("room") int room, @Param("user") int user, @Param("last") int last);
 
 }

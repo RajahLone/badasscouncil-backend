@@ -12,13 +12,13 @@ import fr.triplea.badasscouncil.model.Role;
 public interface RoleRepository extends JpaRepository<Role, Integer> 
 {
 
-  @NativeQuery("SELECT DISTINCT r.* FROM vote.roles AS r WHERE r.numero_role = :id ")
+  @NativeQuery("SELECT DISTINCT r.* FROM badasscouncil.roles AS r WHERE r.roleId = :id ")
   Role findById(@Param("id") int id);
   
-  @NativeQuery("SELECT DISTINCT r.* FROM vote.roles AS r WHERE r.libelle = :libelle ")
-  Role findByLibelle(@Param("libelle") String libelle);
+  @NativeQuery("SELECT DISTINCT r.* FROM badasscouncil.roles AS r WHERE r.label = :label ")
+  Role findByLabel(@Param("label") String label);
   
-  @NativeQuery("SELECT DISTINCT r.* FROM vote.roles AS r ")
+  @NativeQuery("SELECT DISTINCT r.* FROM badasscouncil.roles AS r ")
   List<Role> findAll();
   
   @Override

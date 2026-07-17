@@ -67,10 +67,10 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "LIMIT :limit OFFSET :start ")
   List<UserList> getPageOrderedByDateInscription(@Param("name") String name, @Param("status") int status, @Param("start") int start, @Param("limit") Integer limit);
 
-  @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nom ASC, u.prenom ASC, u.nick_name ASC ")
+  @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC ")
   List<User> findAll();
   
-  @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users_roles AS ru INNER JOIN badasscouncil.users AS u ON ru.user_id = u.user_id INNER JOIN badasscouncil.roles AS r ON ru.numero_role = r.numero_role WHERE u.enabled IS TRUE AND r.enabled IS TRUE AND ru.numero_role = :role ORDER BY u.nom ASC, u.prenom ASC, u.nick_name ASC ")
+  @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users_roles AS ru INNER JOIN badasscouncil.users AS u ON ru.user_id = u.user_id INNER JOIN badasscouncil.roles AS r ON ru.numero_role = r.numero_role WHERE u.enabled IS TRUE AND r.enabled IS TRUE AND ru.numero_role = :role ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC ")
   List<User> findByRole(@Param("role") Role role);
 
   @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND u.login_name = :login ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC ")

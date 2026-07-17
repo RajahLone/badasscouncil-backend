@@ -39,7 +39,7 @@ import org.springframework.web.servlet.LocaleResolver;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dto.MessagesTransfer;
-import fr.triplea.badasscouncil.dto.ProductionFile;
+import fr.triplea.badasscouncil.dto.AttachmentFile;
 import fr.triplea.badasscouncil.dto.AttachmentShort;
 import fr.triplea.badasscouncil.dto.AttachmentTransfer;
 import fr.triplea.badasscouncil.dto.AttachmentUpdate;
@@ -83,18 +83,11 @@ public class AttachmentController
     
     List<AttachmentShort> files = null;
     
-    if (tri == 1) 
-    {
-      files = attachmentRepository.findAllWithoutArchiveOrderedByInvertedId(this.getUserId(authentication), type, solo);
-    }
-    else 
-    {
-      files = attachmentRepository.findAllWithoutArchiveOrderedByTitle(this.getUserId(authentication), type, solo);
-    }
+    files = attachmentRepository.findByOwner(this.getUserId(authentication));
      
     List<Attachment> ret = new ArrayList<Attachment>();
     
-    if (files != null) { if (files.size() > 0) { for (AttachmentShort file: files) { ret.add(file.toProduction()); } } }
+    if (files != null) { if (files.size() > 0) { for (AttachmentShort file: files) { ret.add(file.toAttachment()); } } }
     
     return ret;  
   }
@@ -146,7 +139,7 @@ public class AttachmentController
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Attachment> getForm(@PathVariable("id") int fileId, final Authentication authentication)
   { 
-    AttachmentShort p = attachmentRepository.findByIdWithoutArchive(fileId);
+    AttachmentShort p = attachmentRepository.searchById(fileId);
     
     if (p != null) 
     {
@@ -154,7 +147,7 @@ public class AttachmentController
 
       if ((userId == 0) || (p.ownerId() == userId))
       {
-        return ResponseEntity.ok(p.toProduction()); 
+        return ResponseEntity.ok(p.toAttachment()); 
       }
     }
     
@@ -163,15 +156,15 @@ public class AttachmentController
 
   @GetMapping(value = "/formfile/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<ProductionFile> getFormFile(@PathVariable("id") int fileId, final Authentication authentication)
+  public ResponseEntity<AttachmentFile> getFormFile(@PathVariable("id") int fileId, final Authentication authentication)
   { 
-    ProductionFile p = attachmentRepository.findByIdForUpload(fileId);
+    AttachmentFile p = attachmentRepository.findByIdForUpload(fileId);
     
     if (p != null) 
     { 
-      int numeroUser = this.getUserId(authentication);
+      int userId = this.getUserId(authentication);
 
-      if ((numeroUser == 0) || (p.numeroGestionnaire() == numeroUser))
+      if ((userId == 0) || (p.ownerId() == userId))
       {
         return ResponseEntity.ok(p); 
       }
@@ -296,7 +289,7 @@ public class AttachmentController
         if (chunkFile.exists()) { if (chunkFile.length() == chunkData.getSize()) { succes = true;  } } 
         
         if (succes) { mt.setInformation(messageSource.getMessage("chunk.upload.success", new Object[] { chunkIndex, fileName }, locale)); } 
-               else { mt.setErreur(messageSource.getMessage("chunk.upload.failed", new Object[] { chunkIndex, fileName }, locale)); }
+               else { mt.setError(messageSource.getMessage("chunk.upload.failed", new Object[] { chunkIndex, fileName }, locale)); }
         
         return ResponseEntity.ok(mt);
       }
@@ -396,7 +389,7 @@ public class AttachmentController
         if (succes) { dir.delete(); }
         
         if (succes) { mt.setInformation(messageSource.getMessage("chunk.merged.success", new Object[] { fileName }, locale)); }
-               else { mt.setErreur(messageSource.getMessage("chunk.merged.failed", new Object[] { fileName }, locale)); }
+               else { mt.setError(messageSource.getMessage("chunk.merged.failed", new Object[] { fileName }, locale)); }
         
         return ResponseEntity.ok(mt);
       }

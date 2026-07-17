@@ -17,7 +17,7 @@ public record AttachmentShort
   Integer versionNumber
 ) 
 { 
-  public Attachment toProduction() 
+  public Attachment toAttachment() 
   {
     Attachment p = new Attachment();
     

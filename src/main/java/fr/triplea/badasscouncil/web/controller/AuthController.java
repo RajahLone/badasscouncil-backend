@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,9 +20,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
+import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dto.PasswordTransfer;
 import fr.triplea.badasscouncil.dto.RefreshTokenTransfer;
 import fr.triplea.badasscouncil.dto.UserCredentials;
+import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.UserStatus;
 import fr.triplea.badasscouncil.model.RefreshToken;
@@ -52,6 +56,9 @@ public class AuthController
 
   @Autowired
   RefreshTokenService refreshTokenService;
+
+  @Autowired
+  private RoleRepository roleRepository;
 
   @Autowired
   private UserRepository userRepository;
@@ -232,4 +239,94 @@ public class AuthController
     return ResponseEntity.ok(uc);
   }
   
+  @PostMapping(value = "/subscribe")
+  public ResponseEntity<PasswordTransfer> subscribe(@RequestBody(required = true) UserTransfer user, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+   
+    PasswordTransfer pt = new PasswordTransfer();
+ 
+    if (user.getSubscribeMotive().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.motive", null, locale)); return ResponseEntity.ok(pt); }
+    if (user.getLoginName().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.login", null, locale)); return ResponseEntity.ok(pt); }
+    if (user.getPassword().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.password", null, locale)); return ResponseEntity.ok(pt); }
+    if (user.getNickName().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.nickname", null, locale)); return ResponseEntity.ok(pt); }
+ 
+    Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
+    Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
+    Role userRole = roleRepository.findByLabel("ROLE_USER");
+    
+    User found = new User();
+    
+    found.setEnabled(true);
+
+    List<Role> roles = Arrays.asList(userRole);
+    
+    long n = userRepository.count();
+
+    String first = "";
+
+    if (n < 1) 
+    { 
+      // admin for the first subscriber, without PENDING status.
+      
+      roles.add(adminRole); 
+      roles.add(regulRole); 
+      
+      found.setStatus(UserStatus.ACTIVE);
+      
+      first = " " + messageSource.getMessage("account.subscribe.first", null, locale);
+    } 
+    else 
+    { 
+      found.setStatus(UserStatus.PENDING); 
+    } 
+    
+    found.setRoles(roles);
+    found.setSubscribeMotive(user.getSubscribeMotive());
+    found.setLoginName(user.getLoginName().trim());
+    
+    final String mdp = user.getPassword().trim();
+
+    found.setPasswordHash(passwordEncoder.encode(mdp));
+
+    found.setSessionTimeout(user.getSessionTimeout());
+    
+    found.setNickName(user.getNickName().trim());
+    found.setGroupName(user.getGroupName().trim()); 
+    found.setFirstName(user.getFirstName());
+    found.setLastName(user.getLastName());
+     
+    found.setDisplayCoordinates(user.mustDisplayCoordinates());  
+    found.setAddress(user.getAddress());
+    found.setZipCode(user.getZipCode());
+    found.setTown(user.getTown());
+    found.setCountry(user.getCountry());
+    found.setPhone(user.getPhone());
+    found.setEmail(user.getEmail());
+    
+    n = userRepository.count(user.getLoginName().trim().toUpperCase());
+    
+    if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.login", null, locale)); return ResponseEntity.ok(pt); }
+    
+    if (user.getGroupName().isBlank()) 
+    {
+      n = userRepository.count(user.getNickName().trim().toUpperCase(), "");
+      
+      if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickname", null, locale)); return ResponseEntity.ok(pt); }
+    }
+    else 
+    {
+      n = userRepository.count(user.getNickName().trim().toUpperCase(), user.getGroupName().trim().toUpperCase());
+      
+      if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickgroupname", null, locale)); return ResponseEntity.ok(pt); }
+    }
+    
+    userRepository.saveAndFlush(found);
+
+    pt.setError("");
+    pt.setSuccess(messageSource.getMessage("account.subscribe.success", null, locale) + first); 
+    
+    return ResponseEntity.ok(pt);
+  }
+
 }

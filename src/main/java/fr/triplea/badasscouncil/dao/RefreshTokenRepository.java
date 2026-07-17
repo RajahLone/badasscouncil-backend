@@ -15,7 +15,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
   RefreshToken findByToken(String token);
 
   @Modifying(clearAutomatically = true)
-  @NativeQuery("DELETE FROM vote.refreshtoken AS r WHERE r.numero_participant = :numero ")
+  @NativeQuery("DELETE FROM badasscouncil.refreshtoken AS r WHERE r.numero_participant = :numero ")
   int deleteByNumeroParticipant(@Param("numero") int numeroParticipant);
   
 }

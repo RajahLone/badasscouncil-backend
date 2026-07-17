@@ -66,7 +66,7 @@ public class MessageController
       
       if ((found != null) && (last >= 0)) 
       {         
-        mlist = messageRepository.findNew(found.getId(), last);
+        mlist = messageRepository.findNew(0, found.getId(), last);
       }
     }
 
@@ -85,28 +85,31 @@ public class MessageController
     {
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if ((found != null) && (last >= 0) && (authentication.getName().equals(message.pseudonyme()))) 
+      if ((found != null) && (last >= 0)) 
       { 
-        String ligne = message.ligne();
-        
-        if (ligne == null) { ligne = ""; }
-        
-        if (!ligne.isBlank())
+        if (found.getNickName().equals(message.nickName()))
         {
-          Message m = new Message();
+          String ligne = message.content();
           
-          m.setId(null);
-          m.setUser(found);
-          m.setContent(ligne);
+          if (ligne == null) { ligne = ""; }
           
-          User destinataire = userRepository.findById(message.numeroDestinataire());
+          if (!ligne.isBlank())
+          {
+            Message m = new Message();
+            
+            m.setId(null);
+            m.setUser(found);
+            m.setContent(ligne);
+            
+            User dest = userRepository.findById(message.destId());
+            
+            if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
+            
+            messageRepository.saveAndFlush(m);
+          }
           
-          if (destinataire != null) { m.setDest(destinataire); } else { m.setDest(null); }
-          
-          messageRepository.saveAndFlush(m);
+          mlist = messageRepository.findNew(0, found.getId(), last);
         }
-        
-        mlist = messageRepository.findNew(found.getId(), last);
       }
     }
 

@@ -52,7 +52,7 @@ public class VariableController
   @PreAuthorize("hasRole('ADMIN')")
   public List<VariableFamily> getOptionList() 
   { 
-    return variableRepository.getTypes(); 
+    return variableRepository.getFamilies(); 
   }
  
   @GetMapping(value = "/form/{id}")

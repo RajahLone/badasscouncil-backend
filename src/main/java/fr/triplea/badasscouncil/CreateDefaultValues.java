@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -21,9 +20,6 @@ import fr.triplea.badasscouncil.model.Variable;
 @Component
 public class CreateDefaultValues implements ApplicationListener<ContextRefreshedEvent>
 {
-
-  @Value("${admin.email.address}")
-  private String adminEmailAddress;
   
   boolean initialise = false;
 
@@ -44,8 +40,8 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
     Locale.setDefault(Locale.ENGLISH);
       
-    Role adminRole = addRoleIfMissing("ROLE_ADMIN");
-    Role regulRole = addRoleIfMissing("ROLE_REGUL");
+    addRoleIfMissing("ROLE_ADMIN");
+    addRoleIfMissing("ROLE_REGUL");
     Role userRole = addRoleIfMissing("ROLE_USER");
     
     
@@ -71,15 +67,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
         }
       }
       
-      if (adminEmailAddress != null)
-      {
-        if (user.getEmail().equalsIgnoreCase(adminEmailAddress))
-        {
-          if (!roles.contains(adminRole)) { roles.add(adminRole); changed = true; }
-          if (!roles.contains(regulRole)) { roles.add(regulRole); changed = true; }
-        }
-      }
-      
       if (changed)
       {
         user.setRoles(roles); 
@@ -91,10 +78,10 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
    
     addVariableIfMissing("Navigation", "LISTING_MAX_USERS", "300");
      
-    addVariableIfMissing("Messages", "ACCUEIL_ERREUR", "message d'erreur paramétrable côté backend.");
-    addVariableIfMissing("Messages", "ACCUEIL_ALERTE", "message d'alerte paramétrable côté backend.  ");
-    addVariableIfMissing("Messages", "ACCUEIL_INFORMATION", "message d'information paramétrable côté backend.  ");
-    addVariableIfMissing("Messages", "ACCUEIL_AUTRE", "message neutre paramétrable côté backend.  ");
+    addVariableIfMissing("Messages", "HOME_ERROR", " ");
+    addVariableIfMissing("Messages", "HOME_WARN", " ");
+    addVariableIfMissing("Messages", "HOME_INFO", " ");
+    addVariableIfMissing("Messages", "HOME_MISC", " ");
     
     initialise = true;
   }
@@ -102,7 +89,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   @Transactional
   public Role addRoleIfMissing(final String libelle) 
   {
-    Role role = roleRepository.findByLibelle(libelle);
+    Role role = roleRepository.findByLabel(libelle);
     
     if (role == null) 
     { 
