@@ -32,18 +32,18 @@ public class Room
 
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "room_id", nullable = false)
-  private Integer id;
+  private Integer roomId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", referencedColumnName="user_id")
@@ -77,7 +77,7 @@ public class Room
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -87,8 +87,8 @@ public class Room
   public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setRoomId(Integer id) { this.roomId = id; }
+  public Integer getRoomId() { return this.roomId; }
   
   public void setUser(final User user) { this.user = user; }
   public User getUser() { return user; }
@@ -153,7 +153,7 @@ public class Room
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Room [id=").append(id)
+    builder.append("Room [id=").append(roomId)
            .append(", name=").append(name)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)

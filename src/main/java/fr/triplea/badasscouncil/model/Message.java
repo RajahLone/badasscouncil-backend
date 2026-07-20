@@ -39,7 +39,7 @@ public class Message
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "message_id", nullable = false)
-  private Integer id;
+  private Integer messageId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", referencedColumnName="user_id")
@@ -57,14 +57,14 @@ public class Message
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
   public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.createdOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setMessageId(Integer id) { this.messageId = id; }
+  public Integer getMessageId() { return this.messageId; }
   
   public void setUser(User p) { this.user = p; }
   public User getUser() { return this.user; }
@@ -82,7 +82,7 @@ public class Message
   {
     final int prime = 42;
     int result = 1;
-    result = (prime * result) + ((getId() == null) ? 0 : getId().hashCode());
+    result = (prime * result) + ((getMessageId() == null) ? 0 : getMessageId().hashCode());
     result = (prime * result) + ((getUser() == null) ? 0 : getUser().hashCode());
     result = (prime * result) + ((getDest() == null) ? 0 : getDest().hashCode());
     result = (prime * result) + ((getContent() == null) ? 0 : getContent().hashCode());
@@ -97,7 +97,7 @@ public class Message
     if (getClass() != obj.getClass()) { return false; }
       
     final Message m = (Message) obj;
-    if (getId() == null) { if (m.getId() == null) { return false; } } else if (!getId().equals(m.getId())) { return false; }
+    if (getMessageId() == null) { if (m.getMessageId() == null) { return false; } } else if (!getMessageId().equals(m.getMessageId())) { return false; }
     if (getUser() == null) { if (m.getUser() == null) { return false; } } else if (!getUser().equals(m.getUser())) { return false; }
     if (getDest() == null) { if (m.getDest() == null) { return false; } } else if (!getDest().equals(m.getDest())) { return false; }
     if (getContent() == null) { if (m.getContent() == null) { return false; } } else if (!getContent().equals(m.getContent())) { return false; }
@@ -110,7 +110,7 @@ public class Message
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Message [id=").append(id)
+    builder.append("Message [id=").append(messageId)
            .append(", user=").append(user)
            .append(", dest=").append(dest)
            .append(", content=").append(content)

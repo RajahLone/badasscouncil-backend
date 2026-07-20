@@ -41,12 +41,12 @@ public class User
 
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
 
   @ManyToMany(fetch = FetchType.EAGER)
@@ -58,7 +58,7 @@ public class User
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id", nullable = false)
-  private Integer id;
+  private Integer userId;
 
   private Boolean enabled = true;
 
@@ -141,7 +141,7 @@ public class User
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -156,8 +156,8 @@ public class User
   public List<Role> getRoles() { return roles; }
   public void setRoles(final List<Role> roles) { this.roles = roles; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setUserId(Integer id) { this.userId = id; }
+  public Integer getUserId() { return this.userId; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }
   public Boolean getEnabled() { return this.enabled; }
@@ -268,7 +268,7 @@ public class User
   {
     final int prime = 42;
     int result = 1;
-    result = (prime * result) + ((getId() == null) ? 0 : getId().hashCode());
+    result = (prime * result) + ((getUserId() == null) ? 0 : getUserId().hashCode());
     result = (prime * result) + ((getEnabled() == null) ? 0 : getEnabled().hashCode());
     result = (prime * result) + ((getLoginName() == null) ? 0 : getLoginName().hashCode());
     result = (prime * result) + ((getNickName() == null) ? 0 : getNickName().hashCode());
@@ -293,7 +293,7 @@ public class User
     if (getClass() != obj.getClass()) { return false; }
       
     final User u = (User) obj;
-    if (getId() == null) { if (u.getId() == null) { return false; } } else if (!getId().equals(u.getId())) { return false; }
+    if (getUserId() == null) { if (u.getUserId() == null) { return false; } } else if (!getUserId().equals(u.getUserId())) { return false; }
     
     return true;
   }
@@ -303,7 +303,7 @@ public class User
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("User [id=").append(id)
+    builder.append("User [id=").append(userId)
            .append(", login=").append(loginName)
            .append(", nickname=").append(nickName)
            .append(", groupName=").append(groupName)

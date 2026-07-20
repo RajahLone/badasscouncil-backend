@@ -27,18 +27,18 @@ public class Variable
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "var_id", nullable = false)
-  private Integer id;
+  private Integer variableId;
   
   @Column(length = 64, nullable = false)
   private String family;
@@ -57,7 +57,7 @@ public class Variable
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -67,8 +67,8 @@ public class Variable
   public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setVariableId(Integer id) { this.variableId = id; }
+  public Integer getVariableId() { return this.variableId; }
   
   public void setFamily(String str) { if (str != null) { this.family = StringUtils.truncate(str, 64); } }
   public String getFamily() { return this.family; }
@@ -118,7 +118,7 @@ public class Variable
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Variable [id=").append(id)
+    builder.append("Variable [id=").append(variableId)
            .append(", family=").append(family)
            .append(", code=").append(code)
            .append(", content=").append(content)

@@ -29,7 +29,7 @@ public class UserTransfer
   private String country;
   private String phone;
   private String email;
- 
+   
   
   public String getCreatedOn() { return createdOn; }
   public void setCreatedOn(String str) { this.createdOn = str; }

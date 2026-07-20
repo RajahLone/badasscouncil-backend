@@ -29,18 +29,18 @@ public class Role
   
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "role_id", nullable = false)
-  private Integer id;
+  private Integer roleId;
   
   private Boolean enabled;
   
@@ -55,7 +55,7 @@ public class Role
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -65,8 +65,8 @@ public class Role
   public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setRoleId(Integer id) { this.roleId = id; }
+  public Integer getRoleId() { return this.roleId; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }
   public Boolean getEnabled() { return this.enabled; }
@@ -110,7 +110,7 @@ public class Role
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Role [id=").append(id)
+    builder.append("Role [id=").append(roleId)
            .append(", label=").append(label)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)

@@ -32,18 +32,18 @@ public class Attachment
 
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "file_id", nullable = false)
-  private Integer id;
+  private Integer fileId;
 
   private Boolean enabled = true;
   
@@ -77,7 +77,7 @@ public class Attachment
 
 
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -87,8 +87,8 @@ public class Attachment
   public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setFileId(Integer id) { this.fileId = id; }
+  public Integer getFileId() { return this.fileId; }
   
   public void setEnabled(boolean b) { this.enabled = Boolean.valueOf(b); }
   public Boolean getEnabled() { return this.enabled; }
@@ -135,7 +135,7 @@ public class Attachment
   {
     final int prime = 42;
     int result = 1;
-    result = (prime * result) + ((getId() == null) ? 0 : getId().hashCode());
+    result = (prime * result) + ((getFileId() == null) ? 0 : getFileId().hashCode());
     result = (prime * result) + ((getEnabled() == null) ? 0 : getEnabled().hashCode());
     result = (prime * result) + ((getUser() == null) ? 0 : getUser().hashCode());
     result = (prime * result) + ((getIpAddress() == null) ? 0 : getIpAddress().hashCode());
@@ -154,7 +154,7 @@ public class Attachment
     if (getClass() != obj.getClass()) { return false; }
       
     final Attachment f = (Attachment) obj;
-    if (getId() == null) { if (f.getId() == null) { return false; } } else if (!getId().equals(f.getId())) { return false; }
+    if (getFileId() == null) { if (f.getFileId() == null) { return false; } } else if (!getFileId().equals(f.getFileId())) { return false; }
     
     return true;
   }
@@ -164,7 +164,7 @@ public class Attachment
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Attachment [id=").append(id)
+    builder.append("Attachment [id=").append(fileId)
            .append(", user=").append(user)
            .append(", IP=").append(ipAddress)
            .append(", publicComment=").append(commentsPublic)

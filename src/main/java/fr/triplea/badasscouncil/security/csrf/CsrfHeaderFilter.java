@@ -29,7 +29,7 @@ public class CsrfHeaderFilter extends OncePerRequestFilter
     
     if (csrf != null) 
     {
-      Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN"); // Angular: "XSRF" et non pas "CSRF"
+      Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN"); // Angular: "XSRF" used, not "CSRF"
 
       String token = csrf.getToken();
       

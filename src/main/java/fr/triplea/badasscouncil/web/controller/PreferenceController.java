@@ -39,7 +39,7 @@ public class PreferenceController
   { 
     Preference found = preferenceRepository.findById(0);
 
-    if (found == null) { preference.setId(null); }
+    if (found == null) { preference.setPreferenceId(null); }
     
     return  preferenceRepository.saveAndFlush(preference);
   }

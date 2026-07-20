@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
@@ -41,7 +40,7 @@ public class VariableController
 
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<Variable> getList(@RequestParam(required = false) String family) 
+  public List<Variable> getList(@PathVariable(name="type", required = false) String family) 
   { 
     if (family != null) { if (family.isBlank()) { family = null; } }
  
@@ -74,7 +73,7 @@ public class VariableController
 
     Variable found = variableRepository.findById(0);
     
-    if (found == null) { variable.setId(null); }
+    if (found == null) { variable.setVariableId(null); }
     
     if (variable.hasFamily() && variable.hasCode()) 
     { 

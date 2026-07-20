@@ -47,7 +47,7 @@ public class MessageController
 
       if (found != null)
       {
-        return userRepository.getNickNameOptionList(found.getId()); 
+        return userRepository.getNickNameOptionList(found.getUserId()); 
       }
     }
     
@@ -56,7 +56,7 @@ public class MessageController
 
   @GetMapping(value = "/new/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getNew(@PathVariable int last, final Authentication authentication)
+  public List<MessageShort> getNew(@PathVariable(name="last") int l, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -64,9 +64,9 @@ public class MessageController
     {
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if ((found != null) && (last >= 0)) 
+      if ((found != null) && (l >= 0)) 
       {         
-        mlist = messageRepository.findNew(0, found.getId(), last);
+        mlist = messageRepository.findNew(0, found.getUserId(), l);
       }
     }
 
@@ -97,7 +97,7 @@ public class MessageController
           {
             Message m = new Message();
             
-            m.setId(null);
+            m.setMessageId(null);
             m.setUser(found);
             m.setContent(ligne);
             
@@ -108,7 +108,7 @@ public class MessageController
             messageRepository.saveAndFlush(m);
           }
           
-          mlist = messageRepository.findNew(0, found.getId(), last);
+          mlist = messageRepository.findNew(0, found.getUserId(), last);
         }
       }
     }

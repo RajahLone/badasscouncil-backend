@@ -50,7 +50,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
 
 @RestController
-@RequestMapping("/production")
+@RequestMapping("/attachment")
 public class AttachmentController 
 {
   //@SuppressWarnings("unused") 
@@ -71,16 +71,8 @@ public class AttachmentController
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<Attachment> getList(
-      @RequestParam(defaultValue="0") int tri, 
-      @RequestParam(required = false) String type, 
-      @RequestParam(required = false) Integer solo, 
-      final Authentication authentication) 
+  public List<Attachment> getList(@RequestParam(name="sort", defaultValue="0", required = false) int s, final Authentication authentication) 
   { 
-    if (type != null) { if (type.isBlank()) { type = null; } }
-    
-    if (solo != null) { solo = Math.max(0, Math.min(solo, 1)); } else { solo = 0; }  
-    
     List<AttachmentShort> files = null;
     
     files = attachmentRepository.findByOwner(this.getUserId(authentication));
@@ -183,7 +175,7 @@ public class AttachmentController
     {
       Attachment fresh = new Attachment();
             
-      fresh.setId(null);
+      fresh.setFileId(null);
       fresh.setIpAddress(new Inet(this.getClientIP(request)));
         
       fresh.setCommentsPublic(file.commentsPublic());
@@ -195,7 +187,7 @@ public class AttachmentController
       
       attachmentRepository.saveAndFlush(fresh);
 
-      return ResponseEntity.ok(Integer.valueOf(fresh.getId()));
+      return ResponseEntity.ok(Integer.valueOf(fresh.getFileId()));
     }
 
     return ResponseEntity.notFound().build(); 
@@ -410,7 +402,7 @@ public class AttachmentController
     {
       int userId = this.getUserId(authentication);
 
-      if ((userId == 0) || (found.getUser().getId() == userId))
+      if ((userId == 0) || (found.getUser().getUserId() == userId))
       {
         found.setEnabled(true); 
         
@@ -445,7 +437,7 @@ public class AttachmentController
       
       if (found != null)
       {
-        numeroParticipant = found.getId();
+        numeroParticipant = found.getUserId();
         
         List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
 

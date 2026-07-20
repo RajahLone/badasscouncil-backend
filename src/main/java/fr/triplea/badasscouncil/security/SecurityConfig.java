@@ -90,7 +90,7 @@ public class SecurityConfig
   {
     HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
     
-    repository.setHeaderName("X-XSRF-TOKEN"); // Angular: "XSRF" et non pas "CSRF"
+    repository.setHeaderName("X-XSRF-TOKEN"); // Angular: "XSRF" used, not "CSRF"
     
     return repository;
   }
@@ -107,9 +107,10 @@ public class SecurityConfig
         .redirectToHttps(withDefaults())
         .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
-          .requestMatchers("/divers/**", "/sign/**").permitAll()
-          .requestMatchers("/account/**", "/preference/**", "/message/**").hasRole("USER")
-          .requestMatchers("/variable/**", "/user/**").hasRole("ADMIN")
+          .requestMatchers("/misc/**", "/sign/**").permitAll()
+          .requestMatchers("/account/**", "/preference/**", "/message/**", "/attachment/**").hasRole("USER")
+          .requestMatchers("/user/**").hasRole("REGUL")
+          .requestMatchers("/variable/**").hasRole("ADMIN")
           .anyRequest().authenticated()
           )
         .addFilterBefore(jwtTokenFilter(), upaf_clazz)

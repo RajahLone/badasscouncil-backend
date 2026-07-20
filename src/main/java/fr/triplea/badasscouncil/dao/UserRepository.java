@@ -32,7 +32,7 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "FROM badasscouncil.users AS u "
       + "WHERE u.enabled IS TRUE "
       + "AND ((:name IS NULL) OR (UPPER(u.nick_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.group_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.first_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.last_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.email) LIKE CONCAT('%', :name, '%'))) "
-      + "AND ((:status = 0) OR (:status = 1 AND u.status = 'LOCKED'::badasscouncil.statut_participant)) ")
+      + "AND ((:status = 0) OR (:status = 1 AND u.status = 'LOCKED'::badasscouncil.user_status)) ")
   Integer count(@Param("name") String name, @Param("status") int status);
   
   @NativeQuery("SELECT DISTINCT "
@@ -46,7 +46,7 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "FROM badasscouncil.users AS u "
       + "WHERE u.enabled IS TRUE "
       + "AND ((:name IS NULL) OR (UPPER(u.nick_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.group_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.first_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.last_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.email) LIKE CONCAT('%', :name, '%'))) "
-      + "AND ((:status = 0) OR (:status = 1 AND u.statut = 'LOCKED'::badasscouncil.statut_participant)) "
+      + "AND ((:status = 0) OR (:status = 1 AND u.status = 'LOCKED'::badasscouncil.user_status)) "
       + "ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC "
       + "LIMIT :limit OFFSET :start ")
   List<UserList> getPageOrderedByNom(@Param("name") String name, @Param("status") int status, @Param("start") int start, @Param("limit") Integer limit);
@@ -62,7 +62,7 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "FROM badasscouncil.users AS u "
       + "WHERE u.enabled IS TRUE "
       + "AND ((:name IS NULL) OR (UPPER(u.nick_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.group_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.first_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.last_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.email) LIKE CONCAT('%', :name, '%'))) "
-      + "AND ((:status = 0) OR (:status = 1 AND u.statut = 'LOCKED'::badasscouncil.statut_participant)) "
+      + "AND ((:status = 0) OR (:status = 1 AND u.status = 'LOCKED'::badasscouncil.user_status)) "
       + "ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC "
       + "LIMIT :limit OFFSET :start ")
   List<UserList> getPageOrderedByDateInscription(@Param("name") String name, @Param("status") int status, @Param("start") int start, @Param("limit") Integer limit);

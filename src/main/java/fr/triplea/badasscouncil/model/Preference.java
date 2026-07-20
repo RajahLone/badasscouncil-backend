@@ -37,18 +37,18 @@ public class Preference
 
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
   @UpdateTimestamp
-  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy HH:mm:ss", timezone="Europe/Paris")
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "preference_id", nullable = false)
-  private Integer id;
+  private Integer preferenceId;
 
   @ManyToOne
   @JoinColumn(name="user_id", referencedColumnName="user_id")
@@ -64,7 +64,7 @@ public class Preference
   
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
   
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
   public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
@@ -74,8 +74,8 @@ public class Preference
   public void setDateModification(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.updatedOn; }
   
-  public void setId(Integer id) { this.id = id; }
-  public Integer getId() { return this.id; }
+  public void setPreferenceId(Integer id) { this.preferenceId = id; }
+  public Integer getPreferenceId() { return this.preferenceId; }
   
   public void setUser(User u) { this.user = u; }
   public User getUser() { return this.user; }
@@ -92,7 +92,7 @@ public class Preference
   {
     final int prime = 42;
     int result = 1;
-    result = (prime * result) + ((getId() == null) ? 0 : getId().hashCode());
+    result = (prime * result) + ((getPreferenceId() == null) ? 0 : getPreferenceId().hashCode());
     result = (prime * result) + ((getUser() == null) ? 0 : getUser().hashCode());
     result = (prime * result) + ((getActionId() == null) ? 0 : getActionId().hashCode());
     result = (prime * result) + ((getParameters() == null) ? 0 : getParameters().hashCode());
@@ -107,7 +107,7 @@ public class Preference
     if (getClass() != obj.getClass()) { return false; }
       
     final Preference p = (Preference) obj;
-    if (getId() == null) { if (p.getId() == null) { return false; } } else if (!getId().equals(p.getId())) { return false; }
+    if (getPreferenceId() == null) { if (p.getPreferenceId() == null) { return false; } } else if (!getPreferenceId().equals(p.getPreferenceId())) { return false; }
     if (getUser() == null) { if (p.getUser() == null) { return false; } } else if (!getUser().equals(p.getUser())) { return false; }
     if (getActionId() == null) { if (p.getActionId() == null) { return false; } } else if (!getActionId().equals(p.getActionId())) { return false; }
     
@@ -119,7 +119,7 @@ public class Preference
   {
     final StringBuilder builder = new StringBuilder();
     
-    builder.append("Preference [id=").append(id)
+    builder.append("Preference [id=").append(preferenceId)
            .append(", user=").append(user)
            .append(", actionId=").append(actionId)
            .append(", parameters=").append(parameters)

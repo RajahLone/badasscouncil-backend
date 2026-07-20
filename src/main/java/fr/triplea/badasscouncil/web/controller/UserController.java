@@ -64,7 +64,7 @@ public class UserController
   
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public List<UserList> getList(
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") int statusFilter, 
@@ -94,7 +94,7 @@ public class UserController
   }
 
   @GetMapping(value = "/pagination")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public Pagination getCount(
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") int statusFilter, 
@@ -120,18 +120,18 @@ public class UserController
 
   
   @GetMapping(value = "/option-list")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public List<UserOptionList> getOptionList(final Authentication authentication) 
   { 
     return userRepository.getUserOptionList(); 
   }
 
 
-  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
   private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<UserTransfer> getForm(@PathVariable("id") int userId, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
@@ -146,7 +146,7 @@ public class UserController
       
       p.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
       p.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
-      p.setUserId(found.getId());
+      p.setUserId(found.getUserId());
  
       if (found.getStatus().equals(UserStatus.PENDING)) { p.setStatus("PENDING"); }
       else if (found.getStatus().equals(UserStatus.LOCKED)) { p.setStatus("LOCKED"); }
@@ -185,7 +185,7 @@ public class UserController
   }
 
   @PostMapping(value = "/create")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<Object> create(@RequestBody(required = true) UserTransfer user, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
@@ -273,7 +273,7 @@ public class UserController
   }
 
   @PutMapping(value = "/update/{id}")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<Object> update(@PathVariable("id") int userId, @RequestBody(required = true) UserTransfer user, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
@@ -353,7 +353,7 @@ public class UserController
   }
 
   @DeleteMapping(value = "/delete/{id}")
-  @PreAuthorize("hasRole('ORGA')")
+  @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<Map<String, Boolean>> disableUser(@PathVariable("id") int userId, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);

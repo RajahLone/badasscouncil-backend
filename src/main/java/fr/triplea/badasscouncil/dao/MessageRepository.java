@@ -24,7 +24,7 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
              + "LEFT JOIN badasscouncil.users AS d ON m.dest_id = d.user_id "
              + "WHERE "
              + "     (m.room_id = :room) "
-             + " AND (m.numero_message > :last) "
+             + " AND (m.message_id > :last) "
              + " AND ((m.dest_id = :user) OR (m.user_id = :user) OR (m.dest_id IS NULL)) "
              + "ORDER BY m.message_id DESC ")
   List<MessageShort> findNew(@Param("room") int room, @Param("user") int user, @Param("last") int last);

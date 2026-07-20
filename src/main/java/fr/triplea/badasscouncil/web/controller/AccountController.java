@@ -47,7 +47,7 @@ public class AccountController
   @Autowired
   private MessageSource messageSource;
 
-  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
   private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form")
@@ -67,8 +67,10 @@ public class AccountController
         
         p.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
         p.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
-        p.setUserId(found.getId());
-        p.setStatus("");
+        p.setUserId(found.getUserId());
+        p.setStatus(found.getStatus().name());
+        
+        p.setSubscribeMotive(found.getSubscribeMotive());
         
         p.setLoginName(found.getLoginName());
         p.setSessionTimeout(15);

@@ -1,6 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -130,13 +130,13 @@ public class AuthController
           
           String token = jwtTokenUtil.generateJwtToken(authentication);
           
-          refreshTokenService.deleteByNumeroParticipant(found.getId());
+          refreshTokenService.deleteByNumeroParticipant(found.getUserId());
           
-          RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getId());
+          RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getUserId());
                   
           uc = new UserCredentials();
           
-          uc.setUserId(found.getId());
+          uc.setUserId(found.getUserId());
           uc.setLoginName(usrn);
           uc.setPassword("<success@auth>");
           uc.setNickName(found.getNickName());
@@ -219,7 +219,7 @@ public class AuthController
     {
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getId()); }
+      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getUserId()); }
     }
 
     SecurityContextHolder.clearContext();
@@ -251,30 +251,32 @@ public class AuthController
     if (user.getPassword().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.password", null, locale)); return ResponseEntity.ok(pt); }
     if (user.getNickName().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.nickname", null, locale)); return ResponseEntity.ok(pt); }
  
-    Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
-    Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
+    Role adminRole = roleRepository.findByLabel("ROLE_ADMIN"); 
+    Role regulRole = roleRepository.findByLabel("ROLE_REGUL"); 
     Role userRole = roleRepository.findByLabel("ROLE_USER");
     
     User found = new User();
     
     found.setEnabled(true);
 
-    List<Role> roles = Arrays.asList(userRole);
+    List<Role> roles = new ArrayList<Role>();
+    
+    roles.add(userRole);
     
     long n = userRepository.count();
-
-    String first = "";
+    
+    boolean admin = false;
 
     if (n < 1) 
     { 
       // admin for the first subscriber, without PENDING status.
       
-      roles.add(adminRole); 
-      roles.add(regulRole); 
+      roles.add(adminRole);
+      roles.add(regulRole);
       
       found.setStatus(UserStatus.ACTIVE);
       
-      first = " " + messageSource.getMessage("account.subscribe.first", null, locale);
+      admin = true;
     } 
     else 
     { 
@@ -324,7 +326,9 @@ public class AuthController
     userRepository.saveAndFlush(found);
 
     pt.setError("");
-    pt.setSuccess(messageSource.getMessage("account.subscribe.success", null, locale) + first); 
+    
+    if (admin) { pt.setSuccess(messageSource.getMessage("account.subscribe.first", null, locale)); }
+          else { pt.setSuccess(messageSource.getMessage("account.subscribe.success", null, locale)); }
     
     return ResponseEntity.ok(pt);
   }

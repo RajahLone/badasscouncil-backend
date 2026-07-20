@@ -23,7 +23,7 @@ public record AttachmentShort
     
     p.setCreatedOn(createdOn);
     p.setUpdatedOn(updatedOn);
-    p.setId(fileId);
+    p.setFileId(fileId);
     p.setOwnerId(ownerId);
     p.setOwnerName(ownerName);
     p.setIpAddress(IpAddress);

@@ -42,7 +42,7 @@ public class MyUserDetails implements UserDetails
   {
     Set<GrantedAuthority> authorities = user.getRoles().stream().map((role) -> new SimpleGrantedAuthority(role.getLibelle())).collect(Collectors.toSet());
 
-    return new MyUserDetails(user.getId(), user.getLoginName(), user.getPasswordHash(), authorities);
+    return new MyUserDetails(user.getUserId(), user.getLoginName(), user.getPasswordHash(), authorities);
   }
   
   @Override
