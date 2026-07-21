@@ -10,6 +10,8 @@ public class UserCredentials
   
   private String password;
   
+  private boolean passwordExpired = false;
+  
   private String nickName;
 
   private String groupName;
@@ -34,6 +36,9 @@ public class UserCredentials
 
   public void setPassword(String s) { this.password = new String(s); }
   public String getPassword() { return this.password; }
+
+  public void setPasswordExpired(boolean b) { this.passwordExpired = Boolean.valueOf(b); }
+  public Boolean getPasswordExpired() { return this.passwordExpired; }
 
   public void setNickName(String s) { this.nickName = new String(s); }
   public String getNickName() { return this.nickName; }

@@ -7,6 +7,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,6 +45,9 @@ public class AuthController
    
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
+  
+  @Value("${password.salt}")
+  private String salt;
 
   @Autowired
   public PasswordEncoder passwordEncoder;
@@ -88,7 +92,7 @@ public class AuthController
     
       Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) ; 
       
-      if (passwordEncoder.matches(pass, userDetails.getPassword()))
+      if (passwordEncoder.matches(salt + pass, userDetails.getPassword()))
       {
         if (found.getStatus().equals(UserStatus.BANNED))
         {
@@ -139,6 +143,7 @@ public class AuthController
           uc.setUserId(found.getUserId());
           uc.setLoginName(usrn);
           uc.setPassword("<success@auth>");
+          uc.setPasswordExpired(found.isPasswordExpired());
           uc.setNickName(found.getNickName());
           uc.setGroupName(found.getGroupName());
           uc.setSessionTimeout(found.getSessionTimeout());
@@ -289,7 +294,7 @@ public class AuthController
     
     final String mdp = user.getPassword().trim();
 
-    found.setPasswordHash(passwordEncoder.encode(mdp));
+    found.setPasswordHash(passwordEncoder.encode(salt + mdp));
 
     found.setSessionTimeout(user.getSessionTimeout());
     

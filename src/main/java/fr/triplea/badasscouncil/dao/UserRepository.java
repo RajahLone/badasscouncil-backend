@@ -3,6 +3,7 @@ package fr.triplea.badasscouncil.dao;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
@@ -87,6 +88,11 @@ public interface UserRepository extends JpaRepository<User, Integer>
 
   @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE (u.enabled IS TRUE) AND (u.user_id <> :id) AND (LENGTH(u.nick_name) > 0) ORDER BY u.nick_name ASC ")
   List<NickNameOptionList> getNickNameOptionList(@Param("id") int id);
+
+
+  @Modifying
+  @NativeQuery("UPDATE badasscouncil.users SET status = 'ACTIVE'::badasscouncil.user_status WHERE user_id IN :ids ")
+  void setFlagArrives(@Param("ids") List<Integer> usersIds);
 
 
 }

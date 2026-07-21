@@ -4,11 +4,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -16,11 +14,7 @@ public class MyUserDetails implements UserDetails
 {
 
   private static final long serialVersionUID = 412651939994126772L;
-
-  @Autowired
-  @JsonIgnore
-  public PasswordEncoder passwordEncoder;
-  
+   
   private Integer id; 
   
   private String userName; 

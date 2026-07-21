@@ -7,6 +7,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,9 @@ public class AccountController
 
   @Autowired
   private UserRepository userRepository;
+  
+  @Value("${password.salt}")
+  private String salt;
   
   @Autowired
   private PasswordEncoder passwordEncoder;
@@ -170,9 +174,9 @@ public class AccountController
           else
           if (mdp_new.isBlank()) { mdpt.setError(messageSource.getMessage("account.password.new.missing", null, locale)); }
           else
-          if (passwordEncoder.matches(mdp_old, found.getPasswordHash()))
+          if (passwordEncoder.matches(salt + mdp_old, found.getPasswordHash()))
           {
-            found.setPasswordHash(passwordEncoder.encode(mdp_new.trim()));
+            found.setPasswordHash(passwordEncoder.encode(salt + mdp_new.trim()));
             
             userRepository.saveAndFlush(found);
 

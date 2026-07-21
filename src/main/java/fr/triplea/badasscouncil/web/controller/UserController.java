@@ -11,11 +11,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.MessagesTransfer;
@@ -50,9 +53,15 @@ public class UserController
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
   
   @Autowired
   private VariableRepository variableRepository;
+  
+  @Value("${password.salt}")
+  private String salt;
   
   @Autowired
   private PasswordEncoder passwordEncoder;
@@ -167,6 +176,11 @@ public class UserController
       
       u.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
       u.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
+      
+      if (u.getUpdatedOn().equals(u.getCreatedOn())) { u.setUpdatedOn(""); }
+      
+      u.setLastActivityOn("");
+      u.setPassword("");
  
       if (found.getStatus().equals(UserStatus.PENDING)) { u.setStatus("PENDING"); }
       else if (found.getStatus().equals(UserStatus.LOCKED)) { u.setStatus("LOCKED"); }
@@ -279,7 +293,14 @@ public class UserController
           found.setSubscribeMotive(user.getSubscribeMotive());
           
           final String mdp = user.getPassword();
-          if (mdp != null) { if (!(mdp.isBlank())) { found.setPasswordHash(passwordEncoder.encode(mdp.trim())); } } 
+          if (mdp != null) 
+          { 
+            if (!(mdp.isBlank())) 
+            { 
+              found.setPasswordHash(passwordEncoder.encode(salt + mdp.trim())); 
+              found.setPasswordExpired(true);
+            } 
+          } 
 
           found.setSessionTimeout(user.getSessionTimeout());
           
@@ -361,7 +382,13 @@ public class UserController
       found.setSubscribeMotive(user.getSubscribeMotive());
       
       final String mdp = user.getPassword();
-      if (mdp != null) { if (!(mdp.isBlank())) { found.setPasswordHash(passwordEncoder.encode(mdp.trim())); } } 
+      if (mdp != null) 
+      { 
+        if (!(mdp.isBlank())) 
+        { 
+          found.setPasswordHash(passwordEncoder.encode(salt + mdp.trim())); 
+        } 
+      } 
 
       found.setSessionTimeout(user.getSessionTimeout());
       
@@ -429,9 +456,22 @@ public class UserController
     
     if (found != null)
     {
+      refreshTokenRepository.deleteByUserId(found.getUserId());
+      
       found.setEnabled(false); 
       found.setLoginName(found.getLoginName() + "_" + UUID.randomUUID().toString());
-      
+      found.setNickName(found.getNickName() + "_" + UUID.randomUUID().toString());
+ 
+      found.setFirstName("");
+      found.setLastName("");
+       
+      found.setAddress("");
+      found.setZipCode("");
+      found.setTown("");
+      found.setCountry("");
+      found.setPhone("");
+      found.setEmail("");
+
       userRepository.saveAndFlush(found);
 
       Map<String, Boolean> response = new HashMap<>();
@@ -447,5 +487,32 @@ public class UserController
   }
 
   
+
+  @PutMapping(value = "/activate")
+  @PreAuthorize("hasRole('REGUL')")
+  @Transactional
+  public ResponseEntity<Object> update(@RequestBody List<Integer> usersIds, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    if (usersIds != null)
+    {
+      if (usersIds.size() > 0)
+      {
+        userRepository.setFlagArrives(usersIds);
+        userRepository.flush();
+        
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("changed", Boolean.TRUE);
+
+        MessagesTransfer mt = new MessagesTransfer();
+        mt.setAlerte(messageSource.getMessage("users.activated", null, locale));
+
+        return ResponseEntity.ok(response); 
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
 
 }
