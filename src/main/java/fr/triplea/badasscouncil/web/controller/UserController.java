@@ -1,6 +1,7 @@
 package fr.triplea.badasscouncil.web.controller;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -64,16 +65,20 @@ public class UserController
   
 
   @GetMapping(value = "/list")
-  @PreAuthorize("hasRole('REGUL')")
+  @PreAuthorize("hasRole('USER')")
   public List<UserList> getList(
       @RequestParam("name") String nameFilter, 
-      @RequestParam("status") int statusFilter, 
+      @RequestParam("status") String statusFilter, 
       @RequestParam("sort") int sortType, 
       @RequestParam(name="page", defaultValue="0") int pageNumber, 
-      @RequestParam(name="size", defaultValue="0") Integer pageSize
+      @RequestParam(name="size", defaultValue="0") Integer pageSize, 
+      final Authentication authentication
       ) 
   { 
+    if (authentication == null) { return new ArrayList<UserList>(); }
+    
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
+    if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
     
     if (pageSize == 0) { try { pageSize = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { pageSize = null; } }
     
@@ -83,31 +88,36 @@ public class UserController
     
     if (pageNumber > 0) { offset = ((pageNumber * pageSize) + 1); }
     
+    List<UserList> list = null;
+   
     if (sortType == 1) 
     { 
-      return userRepository.getPageOrderedByDateInscription(nameFilter, statusFilter, offset, pageSize); 
+      list = userRepository.getPageOrderedByDateInscription(nameFilter, statusFilter, offset, pageSize); 
     }
     else 
     {
-      return userRepository.getPageOrderedByNom(nameFilter, statusFilter, offset, pageSize);
+      list = userRepository.getPageOrderedByNom(nameFilter, statusFilter, offset, pageSize);
     }
+    
+    return list;
   }
 
   @GetMapping(value = "/pagination")
-  @PreAuthorize("hasRole('REGUL')")
+  @PreAuthorize("hasRole('USER')")
   public Pagination getCount(
       @RequestParam("name") String nameFilter, 
-      @RequestParam("status") int statusFilter, 
+      @RequestParam("status") String statusFilter, 
       @RequestParam(name="page", defaultValue="0") int pageNumber
       ) 
   { 
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
-    
+    if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
+
     int nombreParPage = 100;
     
     try { nombreParPage = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { nombreParPage = 100; }
 
-    int nombreElements = userRepository.count(nameFilter, statusFilter);
+    int nombreElements = userRepository.countForNameStatus(nameFilter, statusFilter);
      
     int nombrePages = 0;
     
@@ -131,9 +141,11 @@ public class UserController
   private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form/{id}")
-  @PreAuthorize("hasRole('REGUL')")
-  public ResponseEntity<UserTransfer> getForm(@PathVariable("id") int userId, HttpServletRequest request) 
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<UserTransfer> getForm(@PathVariable("id") int userId, HttpServletRequest request, final Authentication authentication) 
   { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
     Locale locale = localeResolver.resolveLocale(request);
 
     DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
@@ -142,43 +154,98 @@ public class UserController
     
     if (found != null)
     {
-      UserTransfer p = new UserTransfer();
+      Role adminRole = roleRepository.findByLabel("ROLE_ADMIN"); 
+      Role regulRole = roleRepository.findByLabel("ROLE_REGUL"); 
+      Role userRole = roleRepository.findByLabel("ROLE_USER");
+
+      List<Role> l_roles = null;
       
-      p.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
-      p.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
-      p.setUserId(found.getUserId());
+      try { l_roles = userRepository.findByLoginName(authentication.getName()).getRoles(); } catch (Exception e) { l_roles = new ArrayList<Role>(); }
+      
+      
+      UserTransfer u = new UserTransfer();
+      
+      u.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
+      u.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
  
-      if (found.getStatus().equals(UserStatus.PENDING)) { p.setStatus("PENDING"); }
-      else if (found.getStatus().equals(UserStatus.LOCKED)) { p.setStatus("LOCKED"); }
-      else if (found.getStatus().equals(UserStatus.BANNED)) { p.setStatus("BANNED"); }
-      else if (found.getStatus().equals(UserStatus.SLEEPING)) { p.setStatus("SLEEPING"); }
-      else { p.setStatus("ACTIVE"); }
+      if (found.getStatus().equals(UserStatus.PENDING)) { u.setStatus("PENDING"); }
+      else if (found.getStatus().equals(UserStatus.LOCKED)) { u.setStatus("LOCKED"); }
+      else if (found.getStatus().equals(UserStatus.BANNED)) { u.setStatus("BANNED"); }
+      else if (found.getStatus().equals(UserStatus.SLEEPING)) { u.setStatus("SLEEPING"); }
+      else { u.setStatus("ACTIVE"); }
 
-      p.setSubscribeMotive(found.getSubscribeMotive());
+      u.setNickName(found.getNickName());
+      u.setGroupName(found.getGroupName()); 
+      u.setFirstName(found.getFirstName());
+      u.setLastName(found.getLastName());
+
+      u.setDisplayContactDetails(found.mustDisplayContactDetails());
+
+      if (l_roles.contains(adminRole))
+      {
+        u.setUserId(found.getUserId());
+        u.setSubscribeMotive(found.getSubscribeMotive());
+        
+        u.setLoginName(found.getLoginName());
+        u.setSessionTimeout(found.getSessionTimeout());
+
+        u.setAddress(found.getAddress());
+        u.setZipCode(found.getZipCode());
+        u.setTown(found.getTown());
+        u.setCountry(found.getCountry());
+        u.setPhone(found.getPhone());
+        u.setEmail(found.getEmail());
+      }
+      else if (l_roles.contains(regulRole))
+      {
+        u.setUserId(found.getUserId());
+        u.setSubscribeMotive(found.getSubscribeMotive());
+              
+        u.setLoginName("");
+        u.setSessionTimeout(0);
+
+        u.setAddress(found.getAddress());
+        u.setZipCode(found.getZipCode());
+        u.setTown(found.getTown());
+        u.setCountry(found.getCountry());
+        u.setPhone(found.getPhone());
+        u.setEmail(found.getEmail());
+      }
+      else if (l_roles.contains(userRole))
+      {
+        u.setUserId(0);
+        u.setSubscribeMotive("");
+
+        u.setLoginName("");
+        u.setSessionTimeout(0);
+
+        if (found.mustDisplayContactDetails())
+        {
+          u.setAddress(found.getAddress());
+          u.setZipCode(found.getZipCode());
+          u.setTown(found.getTown());
+          u.setCountry(found.getCountry());
+          u.setPhone(found.getPhone());
+          u.setEmail(found.getEmail());
+        }
+        else 
+        {
+          u.setAddress("");
+          u.setZipCode("");
+          u.setTown("");
+          u.setCountry("");
+          u.setPhone("");
+          u.setEmail("");
+        }
+      }
+       
+      List<Role> u_roles = found.getRoles();       
       
-      p.setLoginName(found.getLoginName());
-      p.setSessionTimeout(found.getSessionTimeout());
+      if (!(u.hasRole())) { for (Role role : u_roles) { if (role.isRole("ADMIN")) { u.setRole("ADMIN"); } } }
+      if (!(u.hasRole())) { for (Role role : u_roles) { if (role.isRole("REGUL")) { u.setRole("REGUL"); } } }
+      if (!(u.hasRole())) { u.setRole("USER"); } 
 
-      p.setNickName(found.getNickName());
-      p.setGroupName(found.getGroupName()); 
-      p.setFirstName(found.getFirstName());
-      p.setLastName(found.getLastName());
-
-      p.setDisplayCoordinates(found.mustDisplayCoordinates());
-      p.setAddress(found.getAddress());
-      p.setZipCode(found.getZipCode());
-      p.setTown(found.getTown());
-      p.setCountry(found.getCountry());
-      p.setPhone(found.getPhone());
-      p.setEmail(found.getEmail());
-      
-      List<Role> roles = found.getRoles();       
-      
-      if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { p.setRole("ADMIN"); } } }
-      if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("REGUL")) { p.setRole("REGUL"); } } }
-      if (!(p.hasRole())) { p.setRole("USER"); } 
-
-      return ResponseEntity.ok(p); 
+      return ResponseEntity.ok(u); 
     }
     
     return ResponseEntity.notFound().build();
@@ -221,7 +288,7 @@ public class UserController
           found.setFirstName(user.getFirstName());
           found.setLastName(user.getLastName());
            
-          found.setDisplayCoordinates(user.mustDisplayCoordinates());  
+          found.setDisplayContactDetails(user.mustDisplayContactDetails());  
           found.setAddress(user.getAddress());
           found.setZipCode(user.getZipCode());
           found.setTown(user.getTown());
@@ -303,7 +370,7 @@ public class UserController
       found.setFirstName(user.getFirstName());
       found.setLastName(user.getLastName());
        
-      found.setDisplayCoordinates(user.mustDisplayCoordinates());  
+      found.setDisplayContactDetails(user.mustDisplayContactDetails());  
       found.setAddress(user.getAddress());
       found.setZipCode(user.getZipCode());
       found.setTown(user.getTown());

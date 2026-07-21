@@ -77,7 +77,7 @@ public class MessageController
 
   @PostMapping(value = "/add/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addMessage(@RequestBody(required = true) MessageShort message, @PathVariable int last, final Authentication authentication)
+  public List<MessageShort> addMessage(@RequestBody(required = true) MessageShort message, @PathVariable("last") int l, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -85,7 +85,7 @@ public class MessageController
     {
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if ((found != null) && (last >= 0)) 
+      if ((found != null) && (l >= 0)) 
       { 
         if (found.getNickName().equals(message.nickName()))
         {
@@ -108,7 +108,7 @@ public class MessageController
             messageRepository.saveAndFlush(m);
           }
           
-          mlist = messageRepository.findNew(0, found.getUserId(), last);
+          mlist = messageRepository.findNew(0, found.getUserId(), l);
         }
       }
     }

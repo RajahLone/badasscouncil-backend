@@ -100,7 +100,7 @@ public class User
   private String lastName;
 
   
-  private Boolean displayCoordinates = false;
+  private Boolean displayContactDetails = false;
   
   @Column(length = 256)
   private String address;
@@ -212,10 +212,10 @@ public class User
   public String getLastName() { return this.lastName; }
 
   
-  public void setDisplayCoordinates(boolean b) { this.displayCoordinates = Boolean.valueOf(b); }
-  public Boolean getDisplayCoordinates() { return this.displayCoordinates; }
+  public void setDisplayContactDetails(boolean b) { this.displayContactDetails = Boolean.valueOf(b); }
+  public Boolean getDisplayContactDetails() { return this.displayContactDetails; }
   @Transient
-  public boolean mustDisplayCoordinates() { return (getPasswordExpired().booleanValue()); }
+  public boolean mustDisplayContactDetails() { return (getPasswordExpired().booleanValue()); }
 
   public void setAddress(String str) { if (str != null) { this.address = StringUtils.truncate(str, 256); } }
   public String getAddress() { return this.address; }

@@ -22,7 +22,7 @@ public class UserTransfer
   private String firstName;
   private String lastName;
 
-  private boolean displayCoordinates;
+  private boolean displayContactDetails;
   private String address;
   private String zipCode;
   private String town;
@@ -78,8 +78,8 @@ public class UserTransfer
   public void setLastName(String str) { this.lastName = str; }
   
   
-  public boolean mustDisplayCoordinates() { return displayCoordinates; }
-  public void setDisplayCoordinates(boolean b) { this.displayCoordinates = b; }
+  public boolean mustDisplayContactDetails() { return displayContactDetails; }
+  public void setDisplayContactDetails(boolean b) { this.displayContactDetails = b; }
    
   public String getAddress() { return address; }
   public void setAddress(String str) { this.address = str; }

@@ -122,7 +122,7 @@ public class AccountController
         found.setFirstName(user.getFirstName());
         found.setLastName(user.getLastName());
         
-        found.setDisplayCoordinates(user.mustDisplayCoordinates());
+        found.setDisplayContactDetails(user.mustDisplayContactDetails());
         found.setAddress(user.getAddress());
         found.setZipCode(user.getZipCode());
         found.setTown(user.getTown());

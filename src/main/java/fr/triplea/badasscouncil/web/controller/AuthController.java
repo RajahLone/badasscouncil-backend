@@ -298,7 +298,7 @@ public class AuthController
     found.setFirstName(user.getFirstName());
     found.setLastName(user.getLastName());
      
-    found.setDisplayCoordinates(user.mustDisplayCoordinates());  
+    found.setDisplayContactDetails(user.mustDisplayContactDetails());  
     found.setAddress(user.getAddress());
     found.setZipCode(user.getZipCode());
     found.setTown(user.getTown());
@@ -312,13 +312,13 @@ public class AuthController
     
     if (user.getGroupName().isBlank()) 
     {
-      n = userRepository.count(user.getNickName().trim().toUpperCase(), "");
+      n = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), "");
       
       if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickname", null, locale)); return ResponseEntity.ok(pt); }
     }
     else 
     {
-      n = userRepository.count(user.getNickName().trim().toUpperCase(), user.getGroupName().trim().toUpperCase());
+      n = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), user.getGroupName().trim().toUpperCase());
       
       if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickgroupname", null, locale)); return ResponseEntity.ok(pt); }
     }

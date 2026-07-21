@@ -108,8 +108,7 @@ public class SecurityConfig
         .authenticationManager(authenticationManager())
         .authorizeHttpRequests((ahreq) -> ahreq
           .requestMatchers("/misc/**", "/sign/**").permitAll()
-          .requestMatchers("/account/**", "/preference/**", "/message/**", "/attachment/**").hasRole("USER")
-          .requestMatchers("/user/**").hasRole("REGUL")
+          .requestMatchers("/account/**", "/preference/**", "/message/**", "/attachment/**", "/user/**").hasRole("USER")
           .requestMatchers("/variable/**").hasRole("ADMIN")
           .anyRequest().authenticated()
           )
