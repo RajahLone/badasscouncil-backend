@@ -30,6 +30,7 @@ public class UserTransfer
   private String phone;
   private String email;
    
+  private String answer;
   
   public String getCreatedOn() { return createdOn; }
   public void setCreatedOn(String str) { this.createdOn = str; }
@@ -78,6 +79,7 @@ public class UserTransfer
   public void setLastName(String str) { this.lastName = str; }
   
   
+  public boolean getDisplayContactDetails() { return displayContactDetails; }
   public boolean mustDisplayContactDetails() { return displayContactDetails; }
   public void setDisplayContactDetails(boolean b) { this.displayContactDetails = b; }
    
@@ -99,5 +101,7 @@ public class UserTransfer
   public String getEmail() { return email; }
   public void setEmail(String str) { this.email = str; }
   
+  public String getAnswer() { return answer; }
+  public void setAnswer(String str) { this.answer = str; }
  
 }

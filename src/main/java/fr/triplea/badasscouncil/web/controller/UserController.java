@@ -33,7 +33,7 @@ import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.PreferenceRepository;
 import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
-import fr.triplea.badasscouncil.dto.MessagesTransfer;
+import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.Pagination;
 import fr.triplea.badasscouncil.dto.UserList;
 import fr.triplea.badasscouncil.dto.UserOptionList;
@@ -355,8 +355,8 @@ public class UserController
                     
           userRepository.saveAndFlush(found);
           
-          MessagesTransfer mt = new MessagesTransfer();
-          mt.setInformation(messageSource.getMessage("user.created", null, locale));
+          HomeInformationTransfer mt = new HomeInformationTransfer();
+          mt.setInfo(messageSource.getMessage("user.created", null, locale));
 
           return ResponseEntity.ok(mt);
         }
@@ -437,8 +437,8 @@ public class UserController
 
       userRepository.saveAndFlush(found);
       
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("user.updated", null, locale));
+      HomeInformationTransfer mt = new HomeInformationTransfer();
+      mt.setInfo(messageSource.getMessage("user.updated", null, locale));
     
       return ResponseEntity.ok(mt);
     }
@@ -479,8 +479,8 @@ public class UserController
       Map<String, Boolean> response = new HashMap<>();
       response.put("deleted", Boolean.TRUE);
       
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setAlerte(messageSource.getMessage("user.deleted", null, locale));
+      HomeInformationTransfer mt = new HomeInformationTransfer();
+      mt.setAlert(messageSource.getMessage("user.deleted", null, locale));
 
       return ResponseEntity.ok(response); 
     }      
@@ -507,8 +507,8 @@ public class UserController
         Map<String, Boolean> response = new HashMap<>();
         response.put("changed", Boolean.TRUE);
 
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setAlerte(messageSource.getMessage("users.activated", null, locale));
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setAlert(messageSource.getMessage("users.activated", null, locale));
 
         return ResponseEntity.ok(response); 
       }

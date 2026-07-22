@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.VariableRepository;
-import fr.triplea.badasscouncil.dto.MessagesTransfer;
+import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.VariableFamily;
 import fr.triplea.badasscouncil.model.Variable;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,9 +56,9 @@ public class VariableController
  
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Variable> getForm(@PathVariable("id") int numeroVariable) 
+  public ResponseEntity<Variable> getForm(@PathVariable("id") int varId) 
   { 
-    Variable v = variableRepository.findById(numeroVariable);
+    Variable v = variableRepository.findById(varId);
     
     if (v != null) { return ResponseEntity.ok(v); } 
     
@@ -79,8 +79,8 @@ public class VariableController
     { 
       variableRepository.saveAndFlush(variable); 
       
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("variable.created", null, locale));
+      HomeInformationTransfer mt = new HomeInformationTransfer();
+      mt.setInfo(messageSource.getMessage("variable.created", null, locale));
 
       return ResponseEntity.ok(mt);
     }
@@ -90,11 +90,11 @@ public class VariableController
  
   @PutMapping(value = "/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> update(@PathVariable("id") int numeroVariable, @RequestBody(required = true) Variable variable, HttpServletRequest request) 
+  public ResponseEntity<Object> update(@PathVariable("id") int varId, @RequestBody(required = true) Variable variable, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Variable found = variableRepository.findById(numeroVariable);
+    Variable found = variableRepository.findById(varId);
     
     if (found != null)
     {
@@ -105,8 +105,8 @@ public class VariableController
       
       variableRepository.saveAndFlush(found);
       
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("variable.updated", null, locale));
+      HomeInformationTransfer mt = new HomeInformationTransfer();
+      mt.setInfo(messageSource.getMessage("variable.updated", null, locale));
 
       return ResponseEntity.ok(mt);
     }
@@ -116,18 +116,18 @@ public class VariableController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> deleteVariable(@PathVariable int id, HttpServletRequest request) 
+  public ResponseEntity<Object> deleteVariable(@PathVariable("id") int varId, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
-    Variable found = variableRepository.findById(id);
+    Variable found = variableRepository.findById(varId);
 
     if (found != null) 
     { 
-      variableRepository.deleteById(id); 
+      variableRepository.deleteById(varId); 
       
-      MessagesTransfer mt = new MessagesTransfer();
-      mt.setInformation(messageSource.getMessage("variable.deleted", null, locale));
+      HomeInformationTransfer mt = new HomeInformationTransfer();
+      mt.setInfo(messageSource.getMessage("variable.deleted", null, locale));
 
       return ResponseEntity.ok(mt);
     }

@@ -74,13 +74,18 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       }
     }
     
-    addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris");
+    addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris", "");
         
-    addVariableIfMissing("Messages", "HOME_ERROR", " ");
-    addVariableIfMissing("Messages", "HOME_WARN", " ");
-    addVariableIfMissing("Messages", "HOME_INFO", " ");
-    addVariableIfMissing("Messages", "HOME_MISC", " ");
-    
+    addVariableIfMissing("Messages", "HOME_ERROR", " ", "If not blank, this error message will be displayed for all (even not logged people) on the home page.");
+    addVariableIfMissing("Messages", "HOME_WARN", " ", "If not blank, this warning message will be displayed for all (even not logged people) on the home page.");
+    addVariableIfMissing("Messages", "HOME_INFO", " ", "If not blank, this information message will be displayed for all (even not logged people) on the home page.");
+    addVariableIfMissing("Messages", "HOME_MISC", " ", "If not blank, this neutral message will be displayed for all (even not logged people) on the home page.");
+
+    addVariableIfMissing("CAPTCHA", "SUBSCRIBE_QUESTION", " ", "If question and its response not blank, this will be displayed when subscribing. Choose a private question, on which response is unknown to the internet.");
+    addVariableIfMissing("CAPTCHA", "SUBSCRIBE_RESPONSE", " ", "If not blank, mandatory response is required for the subscription to succeed.");
+    addVariableIfMissing("CAPTCHA", "LOGIN_QUESTION", " ", "If question and its reponse not blank, this will be displayed when signing in. Choose a private question, on which response is unknown to the internet.");
+    addVariableIfMissing("CAPTCHA", "LOGIN_RESPONSE", " ", "If not blank, mandatory response is required when signing in.");
+
     initialise = true;
   }
 
@@ -102,7 +107,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   }
 
   @Transactional
-  public void addVariableIfMissing(final String type, final String code, final String valeur) 
+  public void addVariableIfMissing(final String type, final String code, final String content, final String notes) 
   {
     String str = variableRepository.findByFamilyAndCode(type, code);
     
@@ -112,7 +117,8 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
       variable.setFamily(type);
       variable.setCode(code);
-      variable.setContent(valeur);
+      variable.setContent(content);
+      variable.setNotes(notes);
       
       variableRepository.saveAndFlush(variable);
     }

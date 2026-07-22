@@ -38,7 +38,7 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
-import fr.triplea.badasscouncil.dto.MessagesTransfer;
+import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.AttachmentFile;
 import fr.triplea.badasscouncil.dto.AttachmentShort;
 import fr.triplea.badasscouncil.dto.AttachmentTransfer;
@@ -221,8 +221,8 @@ public class AttachmentController
                 
           attachmentRepository.saveAndFlush(found);
           
-          MessagesTransfer mt = new MessagesTransfer();
-          mt.setInformation(messageSource.getMessage("production.updated", null, locale));
+          HomeInformationTransfer mt = new HomeInformationTransfer();
+          mt.setInfo(messageSource.getMessage("production.updated", null, locale));
 
           return ResponseEntity.ok(mt);
         }
@@ -248,7 +248,7 @@ public class AttachmentController
 
       if ((userId == 0) || (found.getOwnerId() == userId))
       {
-        MessagesTransfer mt = new MessagesTransfer();
+        HomeInformationTransfer mt = new HomeInformationTransfer();
 
         File dir = new File("../uploads-temp/" + fileId + "-" + fileName);
         
@@ -280,7 +280,7 @@ public class AttachmentController
         
         if (chunkFile.exists()) { if (chunkFile.length() == chunkData.getSize()) { succes = true;  } } 
         
-        if (succes) { mt.setInformation(messageSource.getMessage("chunk.upload.success", new Object[] { chunkIndex, fileName }, locale)); } 
+        if (succes) { mt.setInfo(messageSource.getMessage("chunk.upload.success", new Object[] { chunkIndex, fileName }, locale)); } 
                else { mt.setError(messageSource.getMessage("chunk.upload.failed", new Object[] { chunkIndex, fileName }, locale)); }
         
         return ResponseEntity.ok(mt);
@@ -305,7 +305,7 @@ public class AttachmentController
 
       if ((userId == 0) || (found.getOwnerId() == userId))
       {
-        MessagesTransfer mt = new MessagesTransfer();
+        HomeInformationTransfer mt = new HomeInformationTransfer();
 
         File dir = new File("../uploads-temp/" + fileId + "-" + fileName);
         
@@ -380,7 +380,7 @@ public class AttachmentController
 
         if (succes) { dir.delete(); }
         
-        if (succes) { mt.setInformation(messageSource.getMessage("chunk.merged.success", new Object[] { fileName }, locale)); }
+        if (succes) { mt.setInfo(messageSource.getMessage("chunk.merged.success", new Object[] { fileName }, locale)); }
                else { mt.setError(messageSource.getMessage("chunk.merged.failed", new Object[] { fileName }, locale)); }
         
         return ResponseEntity.ok(mt);
@@ -406,8 +406,8 @@ public class AttachmentController
       {
         found.setEnabled(true); 
         
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("production.indelible", null, locale));
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("production.indelible", null, locale));
 
         return ResponseEntity.ok(mt);        
       }

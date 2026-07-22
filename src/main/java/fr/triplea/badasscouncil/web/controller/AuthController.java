@@ -23,6 +23,7 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.PasswordTransfer;
 import fr.triplea.badasscouncil.dto.RefreshTokenTransfer;
 import fr.triplea.badasscouncil.dto.UserCredentials;
@@ -68,6 +69,9 @@ public class AuthController
   private UserRepository userRepository;
 
   @Autowired
+  private VariableRepository variableRepository;
+
+  @Autowired
   private LocaleResolver localeResolver;
   
   @Autowired
@@ -78,6 +82,52 @@ public class AuthController
   public ResponseEntity<UserCredentials> signIn(@RequestBody UserCredentials uc, HttpServletRequest request)
   {
     Locale locale = localeResolver.resolveLocale(request);
+
+    String captchaQuestion = variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_QUESTION");
+    String captchaResponse = variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_RESPONSE");
+    String captchaAnswer = uc.getAnswer(); 
+    
+    if (captchaQuestion == null) { captchaQuestion = ""; } else { captchaQuestion = captchaQuestion.trim(); }
+    if (captchaResponse == null) { captchaResponse = ""; } else { captchaResponse = captchaResponse.trim(); }
+    if (captchaAnswer == null) { captchaAnswer = ""; } else { captchaAnswer = captchaAnswer.trim(); }
+     
+    if (!captchaQuestion.isEmpty())
+    {
+      if (captchaAnswer.isEmpty())
+      {
+        uc = new UserCredentials();
+        
+        uc.setUserId(0);
+        uc.setLoginName("");
+        uc.setPassword("");
+        uc.setNickName("");
+        uc.setGroupName("");
+        uc.setSessionTimeout(15);
+        uc.setAccessToken("");
+        uc.setRefreshToken("");
+        uc.setRole("");
+        uc.setError(messageSource.getMessage("captcha.missing.answer", null, locale));     
+
+        return ResponseEntity.ok(uc);
+      }
+      else if (!captchaAnswer.equalsIgnoreCase(captchaResponse)) 
+      {
+        uc = new UserCredentials();
+        
+        uc.setUserId(0);
+        uc.setLoginName("");
+        uc.setPassword("");
+        uc.setNickName("");
+        uc.setGroupName("");
+        uc.setSessionTimeout(15);
+        uc.setAccessToken("");
+        uc.setRefreshToken("");
+        uc.setRole("");
+        uc.setError(messageSource.getMessage("captcha.wrong.answer", null, locale));     
+
+        return ResponseEntity.ok(uc);
+      }
+    }
 
     String usrn = uc.getLoginName(); if (usrn == null) { usrn = ""; } else { usrn = usrn.trim(); }
     String pass = uc.getPassword(); if (pass == null) { pass = ""; } else { pass = pass.trim(); }
@@ -251,6 +301,26 @@ public class AuthController
    
     PasswordTransfer pt = new PasswordTransfer();
  
+    String captchaQuestion = variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_QUESTION");
+    String captchaResponse = variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_RESPONSE");
+    String captchaAnswer = user.getAnswer(); 
+    
+    if (captchaQuestion == null) { captchaQuestion = ""; } else { captchaQuestion = captchaQuestion.trim(); }
+    if (captchaResponse == null) { captchaResponse = ""; } else { captchaResponse = captchaResponse.trim(); }
+    if (captchaAnswer == null) { captchaAnswer = ""; } else { captchaAnswer = captchaAnswer.trim(); }
+     
+    if (!captchaQuestion.isEmpty())
+    {
+      if (captchaAnswer.isEmpty())
+      {
+        pt.setError(messageSource.getMessage("captcha.missing.answer", null, locale)); return ResponseEntity.ok(pt);         
+      }
+      else if (!captchaAnswer.equalsIgnoreCase(captchaResponse)) 
+      {
+        pt.setError(messageSource.getMessage("captcha.wrong.answer", null, locale)); return ResponseEntity.ok(pt);         
+      }
+    }
+     
     if (user.getSubscribeMotive().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.motive", null, locale)); return ResponseEntity.ok(pt); }
     if (user.getLoginName().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.login", null, locale)); return ResponseEntity.ok(pt); }
     if (user.getPassword().isBlank()) { pt.setError(messageSource.getMessage("account.subscribe.missing.password", null, locale)); return ResponseEntity.ok(pt); }

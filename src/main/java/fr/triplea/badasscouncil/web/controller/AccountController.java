@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
-import fr.triplea.badasscouncil.dto.MessagesTransfer;
+import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.PasswordTransfer;
 import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
@@ -84,6 +84,8 @@ public class AccountController
         p.setFirstName(found.getFirstName());
         p.setLastName(found.getLastName());
         
+        p.setDisplayContactDetails(found.mustDisplayContactDetails());
+        
         p.setAddress(found.getAddress());
         p.setZipCode(found.getZipCode());
         p.setTown(found.getTown());
@@ -137,8 +139,8 @@ public class AccountController
                
         userRepository.saveAndFlush(found);
        
-        MessagesTransfer mt = new MessagesTransfer();
-        mt.setInformation(messageSource.getMessage("user.updated", null, locale));
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("user.updated", null, locale));
         
         return ResponseEntity.ok(mt);
       }

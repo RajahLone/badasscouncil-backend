@@ -25,6 +25,9 @@ public class UserCredentials
   private String refreshToken;
 
   private String error;
+  
+  private String answer;
+  
 
   public UserCredentials() {}
    
@@ -61,6 +64,9 @@ public class UserCredentials
   
   public void setError(String s) { this.error = new String(s); }
   public String getError() { return this.error; }
+
+  public void setAnswer(String s) { this.answer =  new String(s); }
+  public String getAnswer() { return answer; }
 
   @Override
   public String toString() 
