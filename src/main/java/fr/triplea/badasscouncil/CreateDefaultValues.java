@@ -75,9 +75,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     }
     
     addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris");
-   
-    addVariableIfMissing("Navigation", "LISTING_MAX_USERS", "300");
-     
+        
     addVariableIfMissing("Messages", "HOME_ERROR", " ");
     addVariableIfMissing("Messages", "HOME_WARN", " ");
     addVariableIfMissing("Messages", "HOME_INFO", " ");

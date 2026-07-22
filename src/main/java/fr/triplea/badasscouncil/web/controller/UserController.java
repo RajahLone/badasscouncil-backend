@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dao.PreferenceRepository;
 import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
-import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.MessagesTransfer;
 import fr.triplea.badasscouncil.dto.Pagination;
 import fr.triplea.badasscouncil.dto.UserList;
@@ -40,6 +40,7 @@ import fr.triplea.badasscouncil.dto.UserOptionList;
 import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.UserStatus;
+import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -56,9 +57,9 @@ public class UserController
 
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
-  
+
   @Autowired
-  private VariableRepository variableRepository;
+  private PreferenceRepository preferenceRepository;
   
   @Value("${password.salt}")
   private String salt;
@@ -79,8 +80,8 @@ public class UserController
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") String statusFilter, 
       @RequestParam("sort") int sortType, 
-      @RequestParam(name="page", defaultValue="0") int pageNumber, 
-      @RequestParam(name="size", defaultValue="0") Integer pageSize, 
+      @RequestParam(name="page", defaultValue="0") int current, 
+      @RequestParam(name="size", defaultValue="0") Integer length, 
       final Authentication authentication
       ) 
   { 
@@ -89,23 +90,28 @@ public class UserController
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
     
-    if (pageSize == 0) { try { pageSize = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { pageSize = null; } }
+    try 
+    { 
+      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.USERS_PAGE_SIZE);
+      if (pref != null) { length = Integer.valueOf(pref.getValue()); } 
+    } 
+    catch (Exception e) { length = null; }
     
-    if ((pageSize == null) || (pageSize == 0)) { pageNumber = 0; }
+    if ((length == null) || (length == 0)) { current = 0; }
     
     int offset = 0;
     
-    if (pageNumber > 0) { offset = ((pageNumber * pageSize) + 1); }
+    if (current > 0) { offset = ((current * length) + 1); }
     
     List<UserList> list = null;
    
     if (sortType == 1) 
     { 
-      list = userRepository.getPageOrderedByDateInscription(nameFilter, statusFilter, offset, pageSize); 
+      list = userRepository.getPageOrderedByDateInscription(nameFilter, statusFilter, offset, length); 
     }
     else 
     {
-      list = userRepository.getPageOrderedByNom(nameFilter, statusFilter, offset, pageSize);
+      list = userRepository.getPageOrderedByNom(nameFilter, statusFilter, offset, length);
     }
     
     return list;
@@ -116,25 +122,31 @@ public class UserController
   public Pagination getCount(
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") String statusFilter, 
-      @RequestParam(name="page", defaultValue="0") int pageNumber
+      @RequestParam(name="page", defaultValue="0") int current, 
+      final Authentication authentication
       ) 
   { 
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
-
-    int nombreParPage = 100;
     
-    try { nombreParPage = Integer.parseInt(variableRepository.findByFamilyAndCode("Navigation", "LISTING_MAX_USERS")); } catch(Exception e) { nombreParPage = 100; }
+    int size = 50;
 
-    int nombreElements = userRepository.countForNameStatus(nameFilter, statusFilter);
+    try 
+    { 
+      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.USERS_PAGE_SIZE);
+      if (pref != null) { size = pref.getValue(); } 
+    } 
+    catch (Exception e) { size = 50; }
+
+    int items = userRepository.countForNameStatus(nameFilter, statusFilter);
      
-    int nombrePages = 0;
+    int pages = 0;
     
-    int decompte = nombreElements; while (decompte > 0) { nombrePages++; decompte -= nombreParPage; }
+    int count = items; while (count > 0) { pages++; count -= size; }
     
-    pageNumber = Math.max(0, Math.min(pageNumber, nombrePages - 1));
+    current = Math.max(0, Math.min(current, pages - 1));
     
-    return new Pagination(nombreElements, nombreParPage, nombrePages, pageNumber);
+    return new Pagination(items, size, pages, current);
   }
 
   
@@ -269,6 +281,8 @@ public class UserController
   @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<Object> create(@RequestBody(required = true) UserTransfer user, final Authentication authentication, HttpServletRequest request) 
   { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
     Locale locale = localeResolver.resolveLocale(request);
 
     User found = userRepository.findById(0);
@@ -318,33 +332,25 @@ public class UserController
           found.setEmail(user.getEmail());
          
           Role userRole = roleRepository.findByLabel("ROLE_USER");
-
-          if (authentication != null)
+          Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
+          Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
+         
+          if ((adminRole != null) && (regulRole != null) && (userRole != null))
           {
-            Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
-            Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
-           
-            if ((adminRole != null) && (regulRole != null) && (userRole != null))
+            List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+            
+            if (user.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
             {
-              List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
-              
-              if (user.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
-              {
-                found.setRoles(Arrays.asList(adminRole, regulRole, userRole));
-              }
-              else if (user.getRole().equals("REGUL") && granter_roles.contains("ROLE_REGUL"))
-              {
-                found.setRoles(Arrays.asList(regulRole, userRole));
-              }
-              else
-              {
-                found.setRoles(Arrays.asList(userRole));
-              }
+              found.setRoles(Arrays.asList(adminRole, regulRole, userRole));
             }
-          }
-          else
-          {
-            if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
+            else if (user.getRole().equals("REGUL") && granter_roles.contains("ROLE_REGUL"))
+            {
+              found.setRoles(Arrays.asList(regulRole, userRole));
+            }
+            else
+            {
+              found.setRoles(Arrays.asList(userRole));
+            }
           }
                     
           userRepository.saveAndFlush(found);
@@ -364,6 +370,8 @@ public class UserController
   @PreAuthorize("hasRole('REGUL')")
   public ResponseEntity<Object> update(@PathVariable("id") int userId, @RequestBody(required = true) UserTransfer user, final Authentication authentication, HttpServletRequest request) 
   { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
     Locale locale = localeResolver.resolveLocale(request);
 
     User found = userRepository.findById(userId);
@@ -406,33 +414,25 @@ public class UserController
       found.setEmail(user.getEmail());
       
       Role userRole = roleRepository.findByLabel("ROLE_USER");
-
-      if (authentication != null)
+      Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
+      Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
+     
+      if ((adminRole != null) && (regulRole != null) && (userRole != null))
       {
-        Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
-        Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
-       
-        if ((adminRole != null) && (regulRole != null) && (userRole != null))
+        List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+        
+        if (user.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
         {
-          List<String> granter_roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
-          
-          if (user.getRole().equals("ADMIN") && granter_roles.contains("ROLE_ADMIN"))
-          {
-            found.setRoles(Arrays.asList(adminRole, regulRole, userRole));
-          }
-          else if (user.getRole().equals("REGUL") && granter_roles.contains("ROLE_REGUL"))
-          {
-            found.setRoles(Arrays.asList(regulRole, userRole));
-          }
-          else
-          {
-            found.setRoles(Arrays.asList(userRole));
-          }
+          found.setRoles(Arrays.asList(adminRole, regulRole, userRole));
         }
-      }
-      else
-      {
-        if (userRole != null) { found.setRoles(Arrays.asList(userRole)); }
+        else if (user.getRole().equals("REGUL") && granter_roles.contains("ROLE_REGUL"))
+        {
+          found.setRoles(Arrays.asList(regulRole, userRole));
+        }
+        else
+        {
+          found.setRoles(Arrays.asList(userRole));
+        }
       }
 
       userRepository.saveAndFlush(found);
@@ -448,8 +448,10 @@ public class UserController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('REGUL')")
-  public ResponseEntity<Map<String, Boolean>> disableUser(@PathVariable("id") int userId, HttpServletRequest request) 
+  public ResponseEntity<Map<String, Boolean>> disableUser(@PathVariable("id") int userId, final Authentication authentication, HttpServletRequest request) 
   { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
     Locale locale = localeResolver.resolveLocale(request);
 
     User found = userRepository.findById(userId);

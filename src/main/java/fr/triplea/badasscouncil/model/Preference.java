@@ -80,12 +80,17 @@ public class Preference
   public void setUser(User u) { this.user = u; }
   public User getUser() { return this.user; }
   
+  public static final int FIRST_ACTION    = 1;
+  public static final int USERS_PAGE_SIZE = 1;
+  public static final int LAST_ACTION     = 1;
+  
   public void setActionId(int a) { this.actionId = Integer.valueOf(a); }
   public Integer getActionId() { return this.actionId; }
   
   public void setParameters(String str) { if (str != null) { this.parameters = StringUtils.truncate(str, 4000); } }
   public String getParameters() { return this.parameters; }
-  
+  @Transient
+  public int getValue() { int v = 0; try { v = Integer.parseInt(getParameters()); } catch(Exception e) { v = 0; } return v; }
 
   @Override
   public int hashCode() 
