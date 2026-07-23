@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dao.PreferenceRepository;
 import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
@@ -60,6 +61,9 @@ public class UserController
 
   @Autowired
   private PreferenceRepository preferenceRepository;
+
+  @Autowired
+  private VariableRepository variableRepository;
   
   @Value("${password.salt}")
   private String salt;
@@ -285,7 +289,15 @@ public class UserController
 
     Locale locale = localeResolver.resolveLocale(request);
 
-    User found = userRepository.findById(0);
+    long cur = userRepository.count();
+    
+    long max = 42;
+    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
+    if (max < 1) { max = 42; }
+
+    User found = null; 
+
+    if (max > cur) { found = userRepository.findById(0); }
     
     if (found == null) 
     {

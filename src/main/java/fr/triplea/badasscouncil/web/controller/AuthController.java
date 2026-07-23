@@ -329,7 +329,17 @@ public class AuthController
     Role adminRole = roleRepository.findByLabel("ROLE_ADMIN"); 
     Role regulRole = roleRepository.findByLabel("ROLE_REGUL"); 
     Role userRole = roleRepository.findByLabel("ROLE_USER");
+        
+    long cur = userRepository.count();
+  
+    long max = 42;
+    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
+    if (max < 1) { max = 42; }
+
+    if (max > cur) { pt.setError(messageSource.getMessage("account.subscribe.quota.reached", null, locale)); return ResponseEntity.ok(pt); }
     
+    boolean admin = false;
+
     User found = new User();
     
     found.setEnabled(true);
@@ -337,12 +347,8 @@ public class AuthController
     List<Role> roles = new ArrayList<Role>();
     
     roles.add(userRole);
-    
-    long n = userRepository.count();
-    
-    boolean admin = false;
 
-    if (n < 1) 
+    if (cur < 1) 
     { 
       // admin for the first subscriber, without PENDING status.
       
@@ -381,21 +387,21 @@ public class AuthController
     found.setPhone(user.getPhone());
     found.setEmail(user.getEmail());
     
-    n = userRepository.count(user.getLoginName().trim().toUpperCase());
+    cur = userRepository.count(user.getLoginName().trim().toUpperCase());
     
-    if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.login", null, locale)); return ResponseEntity.ok(pt); }
+    if (cur > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.login", null, locale)); return ResponseEntity.ok(pt); }
     
     if (user.getGroupName().isBlank()) 
     {
-      n = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), "");
+      cur = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), "");
       
-      if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickname", null, locale)); return ResponseEntity.ok(pt); }
+      if (cur > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickname", null, locale)); return ResponseEntity.ok(pt); }
     }
     else 
     {
-      n = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), user.getGroupName().trim().toUpperCase());
+      cur = userRepository.countForNickGroup(user.getNickName().trim().toUpperCase(), user.getGroupName().trim().toUpperCase());
       
-      if (n > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickgroupname", null, locale)); return ResponseEntity.ok(pt); }
+      if (cur > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.nickgroupname", null, locale)); return ResponseEntity.ok(pt); }
     }
     
     userRepository.saveAndFlush(found);

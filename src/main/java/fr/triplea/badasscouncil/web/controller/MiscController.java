@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
+import fr.triplea.badasscouncil.dto.MemberCountTransfer;
 
 @RestController
 @RequestMapping("/misc")
@@ -19,7 +21,11 @@ public class MiscController
 
   @Autowired
   private VariableRepository variableRepository;
+
+  @Autowired
+  private UserRepository userRepository;
  
+
   @GetMapping(value = "/welcome")
   public ResponseEntity<HomeInformationTransfer> getWelcomeMessage() 
   { 
@@ -56,6 +62,22 @@ public class MiscController
     ct.validate();
         
     return ResponseEntity.ok(ct); 
+  }
+  
+  @GetMapping(value = "/count/members")
+  public ResponseEntity<MemberCountTransfer> getMembersCount() 
+  { 
+    MemberCountTransfer mct = new MemberCountTransfer();
+
+    mct.setCurrent(userRepository.count());
+    
+    long max = 42;
+    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
+    if (max < 1) { max = 42; }
+    
+    mct.setMaximum(max);
+    
+    return ResponseEntity.ok(mct); 
   }
  
 }

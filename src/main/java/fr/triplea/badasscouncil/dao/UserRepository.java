@@ -19,13 +19,13 @@ public interface UserRepository extends JpaRepository<User, Integer>
   @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.user_id = :id AND u.enabled IS TRUE ")
   User findById(@Param("id") int id);
   
-  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u ")
+  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ")
   long count();  
   
-  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE UPPER(u.nick_name) = :nick AND UPPER(u.group_name) = :group ")
+  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND UPPER(u.nick_name) = :nick AND UPPER(u.group_name) = :group ")
   long countForNickGroup(@Param("nick") String nick, @Param("group") String group);
   
-  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE UPPER(u.login_name) = :login")
+  @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND UPPER(u.login_name) = :login")
   long count(@Param("login") String login);
   
   @NativeQuery("SELECT DISTINCT "
