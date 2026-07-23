@@ -26,6 +26,8 @@ public class CaptchaTransfer
       question = "";
       response = "";
     }
+    
+    response = "You wouldn't cheat on a sphinge, believe me."; // don't send answer to client side
   }
   
 }
