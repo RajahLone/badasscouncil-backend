@@ -1,6 +1,8 @@
 package fr.triplea.badasscouncil.web.controller;
 
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,11 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.MemberCountTransfer;
+import fr.triplea.badasscouncil.model.Quote;
 
 @RestController
 @RequestMapping("/misc")
@@ -24,7 +28,10 @@ public class MiscController
 
   @Autowired
   private UserRepository userRepository;
- 
+
+  @Autowired
+  private QuoteRepository quoteRepository;
+
 
   @GetMapping(value = "/welcome")
   public ResponseEntity<HomeInformationTransfer> getWelcomeMessage() 
@@ -78,6 +85,18 @@ public class MiscController
     mct.setMaximum(max);
     
     return ResponseEntity.ok(mct); 
+  }
+  
+  @GetMapping(value = { "/quote", "/quote/{id} "})
+  public ResponseEntity<Quote> getQuote(@PathVariable("id") Optional<Integer> quoteId) 
+  { 
+    Quote quote = null;
+    
+    if (quoteId.isPresent()) { quote = quoteRepository.findById(quoteId.get().intValue()); }
+    
+    if (quote == null) { quote = quoteRepository.getRandom(); }
+    
+    return ResponseEntity.ok(quote); 
   }
  
 }

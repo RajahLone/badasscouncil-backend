@@ -8,8 +8,10 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
+import fr.triplea.badasscouncil.model.Quote;
 import fr.triplea.badasscouncil.model.Role;
 import fr.triplea.badasscouncil.model.Variable;
 
@@ -25,6 +27,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   @Autowired
   private VariableRepository variableRepository;
 
+  @Autowired
+  private QuoteRepository quoteRepository;
+
   @Override
   @Transactional
   public void onApplicationEvent(ContextRefreshedEvent event) 
@@ -33,10 +38,12 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
     Locale.setDefault(Locale.ENGLISH);
       
+    
     addRoleIfMissing("ROLE_ADMIN");
     addRoleIfMissing("ROLE_REGUL");
     addRoleIfMissing("ROLE_USER");
         
+    
     addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris", "");
         
     addVariableIfMissing("Messages", "HOME_ERROR", " ", "If not blank, this error message will be displayed for all (even not logged people) on the home page.");
@@ -51,6 +58,17 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
     addVariableIfMissing("Quota", "MEMBERS_COUNT", "42", "Maximum count for members.");
 
+    
+    addQuote(1, "What happens in your Bad Ass instance... will eventually be purged.");
+    addQuote(2, "Where you can count very few people and, at least, a terrifyingly good person.");
+    addQuote(3, "Headology is not reserved solely for women.");
+    addQuote(4, "We few, we happy few, we band of bastards.");
+    addQuote(5, "Home to at least one goat.");
+    addQuote(6, "Named after a donkey that refused to move.");
+    addQuote(7, "A hidden village tucked in a narrow valley between steep woods.");
+    addQuote(8, "The name may sound crude, but you are not one for senseless niceties.");
+    addQuote(9, "You're not allowed to think about the Dungeon Dimensions.");
+    
     initialise = true;
   }
 
@@ -87,7 +105,22 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       
       variableRepository.saveAndFlush(variable);
     }
-    
   }
 
+  @Transactional
+  public void addQuote(final int id, final String content) 
+  {
+    Quote quote = quoteRepository.findById(id);
+    
+    if (quote == null) 
+    { 
+      quote = new Quote(); 
+      
+      quote.setContent(content); 
+
+      quote = quoteRepository.saveAndFlush(quote);
+    }
+  }
+  
+  
 }
