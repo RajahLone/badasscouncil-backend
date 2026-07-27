@@ -92,7 +92,7 @@ public class AttachmentController
     try 
     { 
       Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.FILES_PER_MEMBER);
-      if (pref != null) { length = Integer.valueOf(pref.getValue()); } 
+      if (pref != null) { length = Integer.valueOf(pref.getValue()); } else { length = Integer.valueOf(50); }
     } 
     catch (Exception e) { length = null; }
     
@@ -268,9 +268,10 @@ public class AttachmentController
     {
       int userId = this.getUserId(authentication);
 
-      if ((userId == 0) || (file.ownerId() == userId))
+      if ((userId == 0) || ((file.ownerId() == userId) && found.getUser().getUserId() == userId))
       {
         User user = userRepository.findById(file.ownerId());
+        User dest = userRepository.findById(file.destId());
         
         if (user != null)
         {
@@ -282,12 +283,14 @@ public class AttachmentController
           found.setCommentsPublic(file.commentsPublic());
           found.setCommentsPrivate(file.commentsPrivate());
           
+          found.setRecipient(dest);
+          
           found.setShared(file.shared());
                 
           attachmentRepository.saveAndFlush(found);
           
           HomeInformationTransfer mt = new HomeInformationTransfer();
-          mt.setInfo(messageSource.getMessage("production.updated", null, locale));
+          mt.setInfo(messageSource.getMessage("attachment.updated", null, locale));
 
           return ResponseEntity.ok(mt);
         }
@@ -297,6 +300,70 @@ public class AttachmentController
     return ResponseEntity.notFound().build();
   }
 
+  @GetMapping(value = "/claim/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Object> claim(@PathVariable("id") int fileId, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Attachment found = attachmentRepository.findById(fileId);
+    
+    if (found != null)
+    {
+      int userId = userRepository.findByLoginName(authentication.getName()).getUserId();
+
+      if (found.getRecipient().getUserId() == userId)
+      {
+        found.setEnabled(true);
+        
+        found.setUser(found.getRecipient());
+        
+        found.setRecipient(null);
+        
+        attachmentRepository.saveAndFlush(found);
+        
+        
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("attachment.claimed", null, locale));
+
+        return ResponseEntity.ok(mt);        
+      }
+    }      
+    
+    return ResponseEntity.notFound().build(); 
+  }
+
+  @GetMapping(value = "/decline/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Object> decline(@PathVariable("id") int fileId, final Authentication authentication, HttpServletRequest request) 
+  { 
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Attachment found = attachmentRepository.findById(fileId);
+    
+    if (found != null)
+    {
+      int userId = userRepository.findByLoginName(authentication.getName()).getUserId();
+
+      if (found.getRecipient().getUserId() == userId)
+      {
+        found.setEnabled(true); 
+        
+        found.setRecipient(null);
+
+        attachmentRepository.saveAndFlush(found);
+
+        
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("attachment.declined", null, locale));
+
+        return ResponseEntity.ok(mt);        
+      }
+    }      
+    
+    return ResponseEntity.notFound().build(); 
+  }
+  
   @PostMapping(value = "/upload-chunk/{id}")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> addFile_upload_chunk(
@@ -483,10 +550,10 @@ public class AttachmentController
 
       if ((userId == 0) || (found.getUser().getUserId() == userId))
       {
-        found.setEnabled(true); 
+        found.setEnabled(false); 
         
         HomeInformationTransfer mt = new HomeInformationTransfer();
-        mt.setInfo(messageSource.getMessage("production.indelible", null, locale));
+        mt.setInfo(messageSource.getMessage("attachment.deleted", null, locale));
 
         return ResponseEntity.ok(mt);        
       }

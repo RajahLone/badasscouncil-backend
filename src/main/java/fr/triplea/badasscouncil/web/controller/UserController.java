@@ -97,7 +97,7 @@ public class UserController
     try 
     { 
       Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.USERS_PAGE_SIZE);
-      if (pref != null) { length = Integer.valueOf(pref.getValue()); } 
+      if (pref != null) { length = Integer.valueOf(pref.getValue()); } else { length = Integer.valueOf(50); }
     } 
     catch (Exception e) { length = null; }
     
@@ -162,7 +162,7 @@ public class UserController
 
   
   @GetMapping(value = "/option-list")
-  @PreAuthorize("hasRole('REGUL')")
+  @PreAuthorize("hasRole('USER')")
   public List<UserOptionList> getOptionList(final Authentication authentication) 
   { 
     return userRepository.getUserOptionList(); 

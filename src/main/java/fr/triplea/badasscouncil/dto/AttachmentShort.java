@@ -15,6 +15,7 @@ public record AttachmentShort
   String archiveName,
   String localName,
   Integer versionNumber,
+  Integer destId,
   Boolean shared
 ) 
 { 
@@ -33,7 +34,10 @@ public record AttachmentShort
     p.setCommentsPrivate(owning ? commentsPrivate : "");
     p.setArchiveName(archiveName);
     p.setLocalName(owning ? localName : "");
-    p.setVersionNumber(versionNumber);    
+    p.setVersionNumber(versionNumber);
+    
+    p.setDestId((destId != ownerId) && (destId != null) ? destId : null);
+    
     p.setShared(shared);
     
     return p;

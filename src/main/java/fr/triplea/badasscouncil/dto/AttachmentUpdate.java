@@ -13,6 +13,7 @@ public record AttachmentUpdate
   String archiveName,
   String localName,
   int versionNumber,
+  int destId,
   boolean shared
 ) 
 { }

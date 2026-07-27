@@ -15,6 +15,7 @@ import io.hypersistence.utils.hibernate.type.basic.Inet;
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLInetType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -71,7 +72,14 @@ public class Attachment
   private String localName;
   
   private Integer versionNumber = 1;
-  
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name="dest_id", referencedColumnName="user_id")
+  private User recipient;
+
+  @Transient
+  private Integer destId;
+
   private Boolean shared = false;
 
   
@@ -130,6 +138,16 @@ public class Attachment
 
   public void setVersionNumber(int n) { this.versionNumber = Integer.valueOf(n); }
   public Integer getVersionNumber() { return this.versionNumber; }
+  
+  
+  public void setRecipient(User u) { this.recipient = u; }
+  public User getRecipient() { return this.recipient; }
+   
+  @Transient
+  public void setDestId(Integer id) { if (id != null) { this.destId = id; } }
+  @Transient
+  public Integer getDestId() { return this.destId; }
+
   
   public void setShared(boolean b) { this.shared = Boolean.valueOf(b); }
   public Boolean getShared() { return this.shared; }

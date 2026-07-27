@@ -14,7 +14,7 @@ import fr.triplea.badasscouncil.model.Attachment;
 public interface AttachmentRepository extends JpaRepository<Attachment, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND ((:owner = 0) OR (a.user_id = :owner) OR (a.shared IS TRUE)) ")
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) ")
   int countForEveryone(@Param("owner") int owner);  
 
   @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND (a.user_id = :owner) ")
@@ -35,6 +35,7 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.archive_name, "
       + "a.local_name, "
       + "a.version_number, "
+      + "a.dest_id, "
       + "a.shared "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
@@ -54,14 +55,15 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.archive_name, "
       + "a.local_name, "
       + "a.version_number, "
+      + "a.dest_id, "
       + "a.shared "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.enabled IS TRUE "
-      + "  AND ((:id = 0) OR (a.user_id = :id) OR (a.shared IS TRUE)) "
+      + "  AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) "
       + "ORDER BY a.archive_name ASC, a.file_id "
       + "LIMIT :limit OFFSET :start ")
-  List<AttachmentShort> findByOwner(@Param("id") Integer id, @Param("start") int start, @Param("limit") Integer limit);
+  List<AttachmentShort> findByOwner(@Param("owner") Integer owner, @Param("start") int start, @Param("limit") Integer limit);
 
   
   @NativeQuery("SELECT DISTINCT " 
