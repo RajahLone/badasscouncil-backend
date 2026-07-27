@@ -13,13 +13,19 @@ import fr.triplea.badasscouncil.model.Attachment;
 
 public interface AttachmentRepository extends JpaRepository<Attachment, Integer> 
 {
+  
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND ((:owner = 0) OR (a.user_id = :owner) OR (a.shared IS TRUE)) ")
+  int countForEveryone(@Param("owner") int owner);  
 
-  @NativeQuery("SELECT DISTINCT a.* FROM badasscouncil.attachments AS a WHERE a.numero_production = :numero AND a.flag_actif IS TRUE ")
-  Attachment findById(@Param("numero") int numeroProduction);
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND (a.user_id = :owner) ")
+  int countForOwnerOnly(@Param("owner") int owner);  
+
+  @NativeQuery("SELECT DISTINCT a.* FROM badasscouncil.attachments AS a WHERE a.file_id = :id AND a.enabled IS TRUE ")
+  Attachment findById(@Param("id") int fileId);
     
   @NativeQuery("SELECT DISTINCT " 
-      + "TO_CHAR(a.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, "
-      + "TO_CHAR(a.updated_on, 'DD/MM/YYYY HH24:MI:SS') as updated_on, "
+      + "TO_CHAR(a.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
+      + "TO_CHAR(a.updated_on, 'MM-DD-YYYY HH24:MI:SS') as updated_on, "
       + "a.file_id, "
       + "a.user_id AS owner_id, "
       + "CONCAT(u.nick_name, ' / ', u.group_name) AS ower_name, "
@@ -28,16 +34,17 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.comments_private, "
       + "a.archive_name, "
       + "a.local_name, "
-      + "a.version_number "
+      + "a.version_number, "
+      + "a.shared "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
-      + "WHERE a.file_id = :file "
+      + "WHERE a.file_id = :id "
       + "  AND a.enabled IS TRUE ")
-  AttachmentShort searchById(@Param("file") Integer file);
+  AttachmentShort searchById(@Param("id") Integer id);
   
   @NativeQuery("SELECT DISTINCT " 
-      + "TO_CHAR(a.created_on, 'DD/MM/YYYY HH24:MI:SS') as created_on, "
-      + "TO_CHAR(a.updated_on, 'DD/MM/YYYY HH24:MI:SS') as updated_on, "
+      + "TO_CHAR(a.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
+      + "TO_CHAR(a.updated_on, 'MM-DD-YYYY HH24:MI:SS') as updated_on, "
       + "a.file_id, "
       + "a.user_id AS owner_id, "
       + "CONCAT(u.nick_name, ' / ', u.group_name) AS ower_name, "
@@ -46,13 +53,15 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.comments_private, "
       + "a.archive_name, "
       + "a.local_name, "
-      + "a.version_number "
+      + "a.version_number, "
+      + "a.shared "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.enabled IS TRUE "
-      + "  AND a.user_id = :user "
-      + "ORDER BY a.archive_name ASC, a.file_id ")
-  List<AttachmentShort> findByOwner(@Param("user") Integer user);
+      + "  AND ((:id = 0) OR (a.user_id = :id) OR (a.shared IS TRUE)) "
+      + "ORDER BY a.archive_name ASC, a.file_id "
+      + "LIMIT :limit OFFSET :start ")
+  List<AttachmentShort> findByOwner(@Param("id") Integer id, @Param("start") int start, @Param("limit") Integer limit);
 
   
   @NativeQuery("SELECT DISTINCT " 

@@ -57,6 +57,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("CAPTCHA", "LOGIN_RESPONSE", " ", "If not blank, mandatory response is required when signing in.");
 
     addVariableIfMissing("Quota", "MEMBERS_COUNT", "42", "Maximum count for members.");
+    addVariableIfMissing("Quota", "FILES_PER_MEMBER", "16", "Maximum files per members.");
 
     
     addQuote(1, "What happens in your Bad Ass instance... will eventually be purged.");

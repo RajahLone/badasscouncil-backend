@@ -1,22 +1,27 @@
 package fr.triplea.badasscouncil.web.controller;
 
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
-import fr.triplea.badasscouncil.dto.MemberCountTransfer;
+import fr.triplea.badasscouncil.dto.ItemCountTransfer;
 import fr.triplea.badasscouncil.model.Quote;
+import fr.triplea.badasscouncil.model.User;
 
 @RestController
 @RequestMapping("/misc")
@@ -28,6 +33,9 @@ public class MiscController
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private AttachmentRepository attachmentRepository;
 
   @Autowired
   private QuoteRepository quoteRepository;
@@ -72,19 +80,51 @@ public class MiscController
   }
   
   @GetMapping(value = "/count/members")
-  public ResponseEntity<MemberCountTransfer> getMembersCount() 
+  public ResponseEntity<ItemCountTransfer> getMembersCount() 
   { 
-    MemberCountTransfer mct = new MemberCountTransfer();
+    ItemCountTransfer ict = new ItemCountTransfer();
 
-    mct.setCurrent(userRepository.count());
+    ict.setCurrent(userRepository.count());
     
     long max = 42;
     try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
     if (max < 1) { max = 42; }
     
-    mct.setMaximum(max);
+    ict.setMaximum(max);
     
-    return ResponseEntity.ok(mct); 
+    return ResponseEntity.ok(ict); 
+  }
+  
+  @GetMapping(value = "/count/files/everyone")
+  public ResponseEntity<ItemCountTransfer> getEveryoneAttachmentsCount(final Authentication authentication) 
+  { 
+    ItemCountTransfer ict = new ItemCountTransfer();
+
+    ict.setCurrent(attachmentRepository.countForEveryone(this.getUserId(authentication)));
+    
+    long max = 16;
+    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "FILES_PER_MEMBER")); } catch (Exception e) { max = -1; }
+    if (max < 1) { max = 16; }
+        
+    ict.setMaximum(max);
+    
+    return ResponseEntity.ok(ict); 
+  }
+  
+  @GetMapping(value = "/count/files/owner")
+  public ResponseEntity<ItemCountTransfer> getOwnerAttachmentsCount(final Authentication authentication) 
+  { 
+    ItemCountTransfer ict = new ItemCountTransfer();
+
+    ict.setCurrent(attachmentRepository.countForOwnerOnly(userRepository.findByLoginName(authentication.getName()).getUserId()));
+    
+    long max = 16;
+    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "FILES_PER_MEMBER")); } catch (Exception e) { max = -1; }
+    if (max < 1) { max = 16; }
+        
+    ict.setMaximum(max);
+    
+    return ResponseEntity.ok(ict); 
   }
   
   @GetMapping(value = { "/quote", "/quote/{id} "})
@@ -98,5 +138,28 @@ public class MiscController
     
     return ResponseEntity.ok(quote); 
   }
- 
+
+
+  /** returns 0 if ROLE_ADMIN, else if USER id */
+  private final int getUserId(Authentication auth)
+  {
+    int userId = -1; // -1 = not found
+    
+    if (auth != null)
+    {
+      User found = userRepository.findByLoginName(auth.getName());
+      
+      if (found != null)
+      {
+        userId = found.getUserId();
+        
+        List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+
+        if (roles.contains("ROLE_ADMIN")) { userId = 0; }
+      }
+    }
+    
+    return userId;
+  }
+
 }

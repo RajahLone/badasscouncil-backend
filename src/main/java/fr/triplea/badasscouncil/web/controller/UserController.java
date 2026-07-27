@@ -109,13 +109,20 @@ public class UserController
     
     List<UserList> list = null;
    
-    if (sortType == 1) 
+    switch (sortType) 
     { 
-      list = userRepository.getPageOrderedByDateInscription(nameFilter, statusFilter, offset, length); 
-    }
-    else 
-    {
-      list = userRepository.getPageOrderedByNom(nameFilter, statusFilter, offset, length);
+      case 1: 
+        list = userRepository.getPageOrderedBySubscriptionDate(nameFilter, statusFilter, offset, length); 
+        break;
+      case 3: 
+        list = userRepository.getPageOrderedBySubscriptionDateInverted(nameFilter, statusFilter, offset, length); 
+        break;
+      case 2: 
+        list = userRepository.getPageOrderedByNameInverted(nameFilter, statusFilter, offset, length); 
+        break;
+      default: 
+        list = userRepository.getPageOrderedByName(nameFilter, statusFilter, offset, length); 
+        break;
     }
     
     return list;

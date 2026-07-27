@@ -72,6 +72,8 @@ public class Attachment
   
   private Integer versionNumber = 1;
   
+  private Boolean shared = false;
+
   
   public Attachment() { super(); }
 
@@ -129,6 +131,11 @@ public class Attachment
   public void setVersionNumber(int n) { this.versionNumber = Integer.valueOf(n); }
   public Integer getVersionNumber() { return this.versionNumber; }
   
+  public void setShared(boolean b) { this.shared = Boolean.valueOf(b); }
+  public Boolean getShared() { return this.shared; }
+  @Transient
+  public boolean isShared() { return (getShared().booleanValue()); }
+
 
   @Override
   public int hashCode() 
@@ -143,6 +150,7 @@ public class Attachment
     result = (prime * result) + ((getCommentsPrivate() == null) ? 0 : getCommentsPrivate().hashCode());
     result = (prime * result) + ((getArchiveName() == null) ? 0 : getArchiveName().hashCode());
     result = (prime * result) + ((getVersionNumber() == null) ? 0 : getVersionNumber().hashCode());
+    result = (prime * result) + ((getShared() == null) ? 0 : getShared().hashCode());
     return result;
   }
 
@@ -174,6 +182,7 @@ public class Attachment
            .append(", version=").append(versionNumber)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)
+           .append(shared ? "" : ", shared")
            .append(enabled ? "" : ", disabled")
            .append("]");
 

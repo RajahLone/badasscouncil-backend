@@ -50,7 +50,23 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "AND ((:status IS NULL) OR (u.status = (:status)::badasscouncil.user_status)) "
       + "ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC "
       + "LIMIT :limit OFFSET :start ")
-  List<UserList> getPageOrderedByNom(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
+  List<UserList> getPageOrderedByName(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
+  
+  @NativeQuery("SELECT DISTINCT "
+      + "u.user_id, "
+      + "u.status, "
+      + "u.nick_name, "
+      + "u.group_name, "
+      + "u.first_name, "
+      + "u.last_name, "
+      + "CASE WHEN u.display_contact_details = true THEN u.email ELSE '' END AS email  "
+      + "FROM badasscouncil.users AS u "
+      + "WHERE u.enabled IS TRUE "
+      + "AND ((:name IS NULL) OR (UPPER(u.nick_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.group_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.first_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.last_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.email) LIKE CONCAT('%', :name, '%'))) "
+      + "AND ((:status IS NULL) OR (u.status = (:status)::badasscouncil.user_status)) "
+      + "ORDER BY u.nick_name DESC, u.group_name DESC, u.first_name DESC, u.last_name DESC "
+      + "LIMIT :limit OFFSET :start ")
+  List<UserList> getPageOrderedByNameInverted(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
   
   @NativeQuery("SELECT DISTINCT "
       + "u.user_id, "
@@ -66,7 +82,23 @@ public interface UserRepository extends JpaRepository<User, Integer>
       + "AND ((:status IS NULL) OR (u.status = (:status)::badasscouncil.user_status)) "
       + "ORDER BY u.user_id ASC "
       + "LIMIT :limit OFFSET :start ")
-  List<UserList> getPageOrderedByDateInscription(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
+  List<UserList> getPageOrderedBySubscriptionDate(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
+  
+  @NativeQuery("SELECT DISTINCT "
+      + "u.user_id, "
+      + "u.status, "
+      + "u.nick_name, "
+      + "u.group_name, "
+      + "u.first_name, "
+      + "u.last_name, "
+      + "CASE WHEN u.display_contact_details = true THEN u.email ELSE '' END AS email  "
+      + "FROM badasscouncil.users AS u "
+      + "WHERE u.enabled IS TRUE "
+      + "AND ((:name IS NULL) OR (UPPER(u.nick_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.group_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.first_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.last_name) LIKE CONCAT('%', :name, '%')) OR (UPPER(u.email) LIKE CONCAT('%', :name, '%'))) "
+      + "AND ((:status IS NULL) OR (u.status = (:status)::badasscouncil.user_status)) "
+      + "ORDER BY u.user_id DESC "
+      + "LIMIT :limit OFFSET :start ")
+  List<UserList> getPageOrderedBySubscriptionDateInverted(@Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
 
   @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC ")
   List<User> findAll();

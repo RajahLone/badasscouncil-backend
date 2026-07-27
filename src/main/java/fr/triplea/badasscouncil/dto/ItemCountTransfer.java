@@ -1,12 +1,12 @@
 package fr.triplea.badasscouncil.dto;
 
-public class MemberCountTransfer
+public class ItemCountTransfer
 {
 
   long current = 0;
   long maximum = 0;
   
-  public MemberCountTransfer() {}
+  public ItemCountTransfer() {}
 
   public void setCurrent(long n) { current = n; }
   public long getCurrent() { return current; }

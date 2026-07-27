@@ -43,6 +43,6 @@ public class RefreshTokenService
   public RefreshToken verifyExpiration(RefreshToken token) { if (token.getExpiryDate().compareTo(Instant.now()) < 0) { refreshTokenRepository.delete(token); return null; } return token; }
 
   @Transactional
-  public int deleteByNumeroParticipant(Integer numeroParticipant) { return refreshTokenRepository.deleteByUserId(numeroParticipant); }
+  public int deleteByNumeroParticipant(Integer userId) { return refreshTokenRepository.deleteByUserId(userId); }
   
 }

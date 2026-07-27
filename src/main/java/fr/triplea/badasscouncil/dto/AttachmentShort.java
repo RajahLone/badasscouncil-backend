@@ -14,10 +14,11 @@ public record AttachmentShort
   String commentsPrivate,
   String archiveName,
   String localName,
-  Integer versionNumber
+  Integer versionNumber,
+  Boolean shared
 ) 
 { 
-  public Attachment toAttachment() 
+  public Attachment toAttachment(boolean owning) 
   {
     Attachment p = new Attachment();
     
@@ -26,13 +27,14 @@ public record AttachmentShort
     p.setFileId(fileId);
     p.setOwnerId(ownerId);
     p.setOwnerName(ownerName);
-    p.setIpAddress(IpAddress);
+    p.setIpAddress(owning ? IpAddress : "");
 
     p.setCommentsPublic(commentsPublic);
-    p.setCommentsPrivate(commentsPrivate);
+    p.setCommentsPrivate(owning ? commentsPrivate : "");
     p.setArchiveName(archiveName);
-    p.setLocalName(localName);
-    p.setVersionNumber(versionNumber);
+    p.setLocalName(owning ? localName : "");
+    p.setVersionNumber(versionNumber);    
+    p.setShared(shared);
     
     return p;
   }  

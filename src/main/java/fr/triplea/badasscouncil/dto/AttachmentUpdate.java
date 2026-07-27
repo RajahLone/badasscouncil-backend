@@ -12,6 +12,7 @@ public record AttachmentUpdate
   String commentsPrivate,
   String archiveName,
   String localName,
-  int versionNumber
+  int versionNumber,
+  boolean shared
 ) 
 { }

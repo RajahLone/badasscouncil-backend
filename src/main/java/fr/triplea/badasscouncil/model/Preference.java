@@ -80,9 +80,10 @@ public class Preference
   public void setUser(User u) { this.user = u; }
   public User getUser() { return this.user; }
   
-  public static final int FIRST_ACTION    = 1;
-  public static final int USERS_PAGE_SIZE = 1;
-  public static final int LAST_ACTION     = 1;
+  public static final int FIRST_ACTION     = 1;
+  public static final int USERS_PAGE_SIZE  = 1;
+  public static final int FILES_PER_MEMBER = 2;
+  public static final int LAST_ACTION      = 2;
   
   public void setActionId(int a) { this.actionId = Integer.valueOf(a); }
   public Integer getActionId() { return this.actionId; }
