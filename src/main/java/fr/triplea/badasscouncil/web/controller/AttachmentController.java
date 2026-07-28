@@ -39,9 +39,9 @@ import org.springframework.web.servlet.LocaleResolver;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
-import fr.triplea.badasscouncil.dao.PreferenceRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.Pagination;
+import fr.triplea.badasscouncil.dto.UserList;
 import fr.triplea.badasscouncil.dto.AttachmentFile;
 import fr.triplea.badasscouncil.dto.AttachmentShort;
 import fr.triplea.badasscouncil.dto.AttachmentTransfer;
@@ -49,6 +49,7 @@ import fr.triplea.badasscouncil.dto.AttachmentUpdate;
 import fr.triplea.badasscouncil.model.Attachment;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.PreferenceService;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
@@ -64,7 +65,7 @@ public class AttachmentController
   private AttachmentRepository attachmentRepository;
 
   @Autowired
-  private PreferenceRepository preferenceRepository;
+  private PreferenceService preferenceService;
 
   @Autowired
   private UserRepository userRepository;
@@ -83,27 +84,56 @@ public class AttachmentController
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
   public List<Attachment> getList(
-      @RequestParam("sort") int s, 
+      @RequestParam("name") String nameFilter, 
+      @RequestParam("status") String statusFilter, 
+      @RequestParam(name="sort", defaultValue="0") Integer sortType, 
       @RequestParam(name="page", defaultValue="0") int current, 
       @RequestParam(name="size", defaultValue="0") Integer length, 
       final Authentication authentication
       ) 
   { 
-    try 
-    { 
-      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.FILES_PER_MEMBER);
-      if (pref != null) { length = Integer.valueOf(pref.getValue()); } else { length = Integer.valueOf(50); }
-    } 
-    catch (Exception e) { length = null; }
+    if (authentication == null) { return new ArrayList<Attachment>(); }
+
+    if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
+    if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
+   
+    StringBuffer sb = new StringBuffer();
     
-    if ((length == null) || (length == 0)) { current = 0; }
+    if (nameFilter != null) { sb.append("&name="); sb.append(nameFilter); }
+    if (statusFilter != null) { sb.append("&status="); sb.append(statusFilter); }
+    if (sortType.intValue() > -1) { sb.append("&sort="); sb.append(sortType.toString()); }
+    
+    preferenceService.set(Preference.FILES_FILTERS, sb.toString(), authentication);
+
+    length = preferenceService.getInteger(Preference.FILES_PER_MEMBER, authentication);
+    
+    if (length == null) 
+    {
+      length = 50;
+      current = 0;
+      
+      preferenceService.set(Preference.USERS_PAGE_SIZE, "50", authentication);
+    }
     
     int offset = 0;
     
-    if (current > 0) { offset = ((current * length) + 1); }
+    if (current > 0) { offset = ((current * length.intValue()) + 1); }
     
-    List<AttachmentShort> files = attachmentRepository.findByOwner(this.getUserId(authentication), offset, length);
+    List<AttachmentShort> files = null; 
      
+    if (sortType != null)
+    {
+      switch (sortType.intValue()) 
+      { 
+        case 1: 
+          files = attachmentRepository.findByOwnerMostRecent(this.getUserId(authentication), nameFilter, statusFilter, offset, length); 
+          break;
+        default: 
+          files = attachmentRepository.findByOwnerSortedByName(this.getUserId(authentication), nameFilter, statusFilter, offset, length); 
+          break;
+      }
+    }
+    
     List<Attachment> ret = new ArrayList<Attachment>();
     
     if (files != null) { if (files.size() > 0) { for (AttachmentShort file: files) { ret.add(file.toAttachment(false)); } } }
@@ -114,28 +144,34 @@ public class AttachmentController
   @GetMapping(value = "/pagination")
   @PreAuthorize("hasRole('USER')")
   public Pagination getCount(
+      @RequestParam("name") String nameFilter, 
+      @RequestParam("status") String statusFilter, 
       @RequestParam(name="page", defaultValue="0") int current, 
       final Authentication authentication
       ) 
   { 
-    int size = 50;
-    
-    try 
-    { 
-      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.FILES_PER_MEMBER);
-      if (pref != null) { size = pref.getValue(); } 
-    } 
-    catch (Exception e) { size = 50; }
+    if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
+    if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
 
-    int items = attachmentRepository.countForEveryone(this.getUserId(authentication));
+    Integer size = preferenceService.getInteger(Preference.FILES_PER_MEMBER, authentication);
+    
+    if (size == null) 
+    {
+      size = 50;
+      current = 0;
+      
+      preferenceService.set(Preference.FILES_PER_MEMBER, "50", authentication);
+    }
+
+    int items = attachmentRepository.countForEveryoneWithFilters(this.getUserId(authentication), nameFilter, statusFilter);
      
     int pages = 0;
     
-    int count = items; while (count > 0) { pages++; count -= size; }
+    int count = items; while (count > 0) { pages++; count -= size.intValue(); }
     
     current = Math.max(0, Math.min(current, pages - 1));
     
-    return new Pagination(items, size, pages, current);
+    return new Pagination(items, size.intValue(), pages, current);
   }
 
   @GetMapping(value = "/file/{id}")

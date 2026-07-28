@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -31,7 +33,6 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
-import fr.triplea.badasscouncil.dao.PreferenceRepository;
 import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
@@ -41,6 +42,7 @@ import fr.triplea.badasscouncil.dto.UserOptionList;
 import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.UserStatus;
+import fr.triplea.badasscouncil.web.service.PreferenceService;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,6 +51,9 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/user")
 public class UserController 
 {
+
+  @SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 
   @Autowired
   private RoleRepository roleRepository;
@@ -60,7 +65,7 @@ public class UserController
   private RefreshTokenRepository refreshTokenRepository;
 
   @Autowired
-  private PreferenceRepository preferenceRepository;
+  private PreferenceService preferenceService;
 
   @Autowired
   private VariableRepository variableRepository;
@@ -83,46 +88,58 @@ public class UserController
   public List<UserList> getList(
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") String statusFilter, 
-      @RequestParam("sort") int sortType, 
+      @RequestParam(name="sort", defaultValue="0") Integer sortType, 
       @RequestParam(name="page", defaultValue="0") int current, 
       @RequestParam(name="size", defaultValue="0") Integer length, 
       final Authentication authentication
       ) 
   { 
     if (authentication == null) { return new ArrayList<UserList>(); }
-    
+        
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
     
-    try 
-    { 
-      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.USERS_PAGE_SIZE);
-      if (pref != null) { length = Integer.valueOf(pref.getValue()); } else { length = Integer.valueOf(50); }
-    } 
-    catch (Exception e) { length = null; }
+    StringBuffer sb = new StringBuffer();
     
-    if ((length == null) || (length == 0)) { current = 0; }
+    if (nameFilter != null) { sb.append("&name="); sb.append(nameFilter); }
+    if (statusFilter != null) { sb.append("&status="); sb.append(statusFilter); }
+    if (sortType.intValue() > -1) { sb.append("&sort="); sb.append(sortType.toString()); }
+    
+    preferenceService.set(Preference.USERS_FILTERS, sb.toString(), authentication);
+    
+    length = preferenceService.getInteger(Preference.USERS_PAGE_SIZE, authentication);
+    
+    if (length == null) 
+    {
+      length = 50;
+      current = 0;
+      
+      preferenceService.set(Preference.USERS_PAGE_SIZE, "50", authentication);
+    }
     
     int offset = 0;
     
-    if (current > 0) { offset = ((current * length) + 1); }
+    if (current > 0) { offset = ((current * length.intValue()) + 1); }
     
     List<UserList> list = null;
    
-    switch (sortType) 
-    { 
-      case 1: 
-        list = userRepository.getPageOrderedBySubscriptionDate(nameFilter, statusFilter, offset, length); 
-        break;
-      case 3: 
-        list = userRepository.getPageOrderedBySubscriptionDateInverted(nameFilter, statusFilter, offset, length); 
-        break;
-      case 2: 
-        list = userRepository.getPageOrderedByNameInverted(nameFilter, statusFilter, offset, length); 
-        break;
-      default: 
-        list = userRepository.getPageOrderedByName(nameFilter, statusFilter, offset, length); 
-        break;
+    if (sortType != null)
+    {
+      switch (sortType.intValue()) 
+      { 
+        case 1: 
+          list = userRepository.getPageOrderedBySubscriptionDate(nameFilter, statusFilter, offset, length); 
+          break;
+        case 3: 
+          list = userRepository.getPageOrderedBySubscriptionDateInverted(nameFilter, statusFilter, offset, length); 
+          break;
+        case 2: 
+          list = userRepository.getPageOrderedByNameInverted(nameFilter, statusFilter, offset, length); 
+          break;
+        default: 
+          list = userRepository.getPageOrderedByName(nameFilter, statusFilter, offset, length); 
+          break;
+      }
     }
     
     return list;
@@ -140,24 +157,25 @@ public class UserController
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
     
-    int size = 50;
-
-    try 
-    { 
-      Preference pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), Preference.USERS_PAGE_SIZE);
-      if (pref != null) { size = pref.getValue(); } 
-    } 
-    catch (Exception e) { size = 50; }
-
+    Integer size = preferenceService.getInteger(Preference.USERS_PAGE_SIZE, authentication);
+    
+    if (size == null) 
+    {
+      size = 50;
+      current = 0;
+      
+      preferenceService.set(Preference.USERS_PAGE_SIZE, "50", authentication);
+    }
+    
     int items = userRepository.countForNameStatus(nameFilter, statusFilter);
      
     int pages = 0;
     
-    int count = items; while (count > 0) { pages++; count -= size; }
+    int count = items; while (count > 0) { pages++; count -= size.intValue(); }
     
     current = Math.max(0, Math.min(current, pages - 1));
     
-    return new Pagination(items, size, pages, current);
+    return new Pagination(items, size.intValue(), pages, current);
   }
 
   

@@ -83,7 +83,9 @@ public class Preference
   public static final int FIRST_ACTION     = 1;
   public static final int USERS_PAGE_SIZE  = 1;
   public static final int FILES_PER_MEMBER = 2;
-  public static final int LAST_ACTION      = 2;
+  public static final int USERS_FILTERS    = 3;
+  public static final int FILES_FILTERS    = 4;
+  public static final int LAST_ACTION      = 4;
   
   public void setActionId(int a) { this.actionId = Integer.valueOf(a); }
   public Integer getActionId() { return this.actionId; }
@@ -91,7 +93,7 @@ public class Preference
   public void setParameters(String str) { if (str != null) { this.parameters = StringUtils.truncate(str, 4000); } }
   public String getParameters() { return this.parameters; }
   @Transient
-  public int getValue() { int v = 0; try { v = Integer.parseInt(getParameters()); } catch(Exception e) { v = 0; } return v; }
+  public int getInteger() { int v = 0; try { v = Integer.parseInt(getParameters()); } catch(Exception e) { v = 0; } return v; }
 
   @Override
   public int hashCode() 

@@ -14,10 +14,21 @@ import fr.triplea.badasscouncil.model.Attachment;
 public interface AttachmentRepository extends JpaRepository<Attachment, Integer> 
 {
   
-  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) ")
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE "
+      + "    a.enabled IS TRUE "
+      + "AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) "
+      + "AND ((:name IS NULL) OR (UPPER(a.archive_name) LIKE CONCAT('%', :name, '%'))) "
+      + "AND ((:status IS NULL) OR (a.dest_id = :owner)) ")
+  int countForEveryoneWithFilters(@Param("owner") int owner, @Param("name") String name, @Param("status") String status);  
+
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE"
+      + "    a.enabled IS TRUE "
+      + "AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) ")
   int countForEveryone(@Param("owner") int owner);  
 
-  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND (a.user_id = :owner) ")
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE "
+      + "     a.enabled IS TRUE "
+      + "AND (a.user_id = :owner) ")
   int countForOwnerOnly(@Param("owner") int owner);  
 
   @NativeQuery("SELECT DISTINCT a.* FROM badasscouncil.attachments AS a WHERE a.file_id = :id AND a.enabled IS TRUE ")
@@ -61,9 +72,35 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.enabled IS TRUE "
       + "  AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) "
+      + "  AND ((:name IS NULL) OR (UPPER(a.archive_name) LIKE CONCAT('%', :name, '%'))) "
+      + "  AND ((:status IS NULL) OR (a.dest_id = :owner)) "
       + "ORDER BY a.archive_name ASC, a.file_id "
       + "LIMIT :limit OFFSET :start ")
-  List<AttachmentShort> findByOwner(@Param("owner") Integer owner, @Param("start") int start, @Param("limit") Integer limit);
+  List<AttachmentShort> findByOwnerSortedByName(@Param("owner") Integer owner, @Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
+  
+  @NativeQuery("SELECT DISTINCT " 
+      + "TO_CHAR(a.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
+      + "TO_CHAR(a.updated_on, 'MM-DD-YYYY HH24:MI:SS') as updated_on, "
+      + "a.file_id, "
+      + "a.user_id AS owner_id, "
+      + "CONCAT(u.nick_name, ' / ', u.group_name) AS ower_name, "
+      + "CAST(a.ip_address AS VARCHAR) AS ip_address, "
+      + "a.comments_public, "
+      + "a.comments_private, "
+      + "a.archive_name, "
+      + "a.local_name, "
+      + "a.version_number, "
+      + "a.dest_id, "
+      + "a.shared "
+      + "FROM badasscouncil.attachments AS a "
+      + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
+      + "WHERE a.enabled IS TRUE "
+      + "  AND ((:owner = 0) OR (a.user_id = :owner) OR (a.dest_id = :owner) OR (a.shared IS TRUE)) "
+      + "  AND ((:name IS NULL) OR (UPPER(a.archive_name) LIKE CONCAT('%', :name, '%'))) "
+      + "  AND ((:status IS NULL) OR (a.dest_id = :owner)) "
+      + "ORDER BY a.file_id DESC "
+      + "LIMIT :limit OFFSET :start ")
+  List<AttachmentShort> findByOwnerMostRecent(@Param("owner") Integer owner, @Param("name") String name, @Param("status") String status, @Param("start") int start, @Param("limit") Integer limit);
 
   
   @NativeQuery("SELECT DISTINCT " 

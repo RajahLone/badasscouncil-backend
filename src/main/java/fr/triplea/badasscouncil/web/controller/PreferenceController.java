@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.triplea.badasscouncil.dao.PreferenceRepository;
-import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.model.Preference;
-import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.PreferenceService;
 
 @RestController
 @RequestMapping("/preference")
@@ -24,34 +22,17 @@ public class PreferenceController
 
 
   @Autowired
-  private UserRepository userRepository;
-
-  @Autowired
-  private PreferenceRepository preferenceRepository;
+  private PreferenceService preferenceService;
 
   
   @GetMapping(value = "/get")
   @PreAuthorize("hasRole('USER')")
-  public Preference get(
+  public String get(
       @RequestParam(name = "action", required = true) int actionId, 
       final Authentication authentication
       ) 
   { 
-    Preference pref = new Preference();
-    
-    if ((actionId >= Preference.FIRST_ACTION) && (actionId <= Preference.LAST_ACTION))
-    {
-      if (authentication != null) 
-      { 
-        try 
-        { 
-          pref = preferenceRepository.findByUserAndAction(userRepository.findByLoginName(authentication.getName()).getUserId(), actionId);
-        } 
-        catch (Exception e) { pref = new Preference(); }
-      }
-    }    
-    
-    return pref; 
+    return preferenceService.getString(actionId, authentication);
   }
 
   @GetMapping(value = "/set")
@@ -62,43 +43,16 @@ public class PreferenceController
       final Authentication authentication
       ) 
   { 
-    if ((actionId >= Preference.FIRST_ACTION) && (actionId <= Preference.LAST_ACTION))
-    {
-      if (authentication != null) 
-      { 
-        User u = userRepository.findByLoginName(authentication.getName());
-        
-        if (u != null)
-        {
-          try 
-          { 
-            Preference pref = preferenceRepository.findByUserAndAction(u.getUserId(), actionId);
-            
-            if (pref != null)
-            {
-              pref.setParameters(parameters);
-            }
-            else
-            {
-              pref = new Preference();
-              
-              pref.setUser(u);
-              pref.setActionId(actionId);
-              pref.setParameters(parameters);
-            }
-            
-            preferenceRepository.saveAndFlush(pref);
-            
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("set", Boolean.TRUE);
+    Preference pref = preferenceService.set(actionId, parameters, authentication);
+    
+    if (pref != null) 
+    { 
+      Map<String, Boolean> response = new HashMap<>();
+      response.put("set", Boolean.TRUE);
 
-            return ResponseEntity.ok(response); 
-          } 
-          catch (Exception e) { }
-        }
-      }
-    }    
-     
+      return ResponseEntity.ok(response); 
+    }
+      
     return ResponseEntity.notFound().build();
   }
 
