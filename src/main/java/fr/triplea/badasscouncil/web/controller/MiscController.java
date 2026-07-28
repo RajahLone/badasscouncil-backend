@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
-import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.ItemCountTransfer;
 import fr.triplea.badasscouncil.model.Quote;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.VariableService;
 
 @RestController
 @RequestMapping("/misc")
@@ -29,7 +29,7 @@ public class MiscController
 {
 
   @Autowired
-  private VariableRepository variableRepository;
+  private VariableService variableService;
 
   @Autowired
   private UserRepository userRepository;
@@ -46,10 +46,10 @@ public class MiscController
   { 
     HomeInformationTransfer mt = new HomeInformationTransfer();
 
-    mt.setError(variableRepository.findByFamilyAndCode("Messages", "HOME_ERROR"));
-    mt.setAlert(variableRepository.findByFamilyAndCode("Messages", "HOME_WARN"));
-    mt.setInfo(variableRepository.findByFamilyAndCode("Messages", "HOME_INFO"));
-    mt.setOther(variableRepository.findByFamilyAndCode("Messages", "HOME_MISC"));
+    mt.setError(variableService.getString("Messages", "HOME_ERROR"));
+    mt.setAlert(variableService.getString("Messages", "HOME_WARN"));
+    mt.setInfo(variableService.getString("Messages", "HOME_INFO"));
+    mt.setOther(variableService.getString("Messages", "HOME_MISC"));
     
     return ResponseEntity.ok(mt); 
   }
@@ -64,14 +64,14 @@ public class MiscController
     
     if (page.equalsIgnoreCase("subscribe"))
     {
-      ct.setQuestion(variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_QUESTION"));
-      ct.setResponse(variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_RESPONSE"));
+      ct.setQuestion(variableService.getString("CAPTCHA", "SUBSCRIBE_QUESTION"));
+      ct.setResponse(variableService.getString("CAPTCHA", "SUBSCRIBE_RESPONSE"));
       
     }
     else if (page.equalsIgnoreCase("login"))
     {
-      ct.setQuestion(variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_QUESTION"));
-      ct.setResponse(variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_RESPONSE"));
+      ct.setQuestion(variableService.getString("CAPTCHA", "LOGIN_QUESTION"));
+      ct.setResponse(variableService.getString("CAPTCHA", "LOGIN_RESPONSE"));
     }
     
     ct.validate();
@@ -84,13 +84,8 @@ public class MiscController
   { 
     ItemCountTransfer ict = new ItemCountTransfer();
 
-    ict.setCurrent(userRepository.count());
-    
-    long max = 42;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 42; }
-    
-    ict.setMaximum(max);
+    ict.setCurrent(userRepository.count());    
+    ict.setMaximum(variableService.getLong("Quota", "MEMBERS_COUNT", 42));
     
     return ResponseEntity.ok(ict); 
   }
@@ -101,45 +96,10 @@ public class MiscController
     ItemCountTransfer ict = new ItemCountTransfer();
 
     ict.setCurrent(attachmentRepository.countForEveryone(this.getUserId(authentication)));
-    
-    long max = 16;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "FILES_PER_MEMBER")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 16; }
-        
-    ict.setMaximum(max);
+    ict.setMaximum(variableService.getLong("Quota", "FILES_PER_MEMBER", 16));
     
     return ResponseEntity.ok(ict); 
   }
-  
-  @GetMapping(value = "/count/files/owner")
-  public ResponseEntity<ItemCountTransfer> getOwnerAttachmentsCount(final Authentication authentication) 
-  { 
-    ItemCountTransfer ict = new ItemCountTransfer();
-
-    ict.setCurrent(attachmentRepository.countForOwnerOnly(userRepository.findByLoginName(authentication.getName()).getUserId()));
-    
-    long max = 16;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "FILES_PER_MEMBER")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 16; }
-        
-    ict.setMaximum(max);
-    
-    return ResponseEntity.ok(ict); 
-  }
-  
-  @GetMapping(value = { "/quote", "/quote/{id} "})
-  public ResponseEntity<Quote> getQuote(@PathVariable("id") Optional<Integer> quoteId) 
-  { 
-    Quote quote = null;
-    
-    if (quoteId.isPresent()) { quote = quoteRepository.findById(quoteId.get().intValue()); }
-    
-    if (quote == null) { quote = quoteRepository.getRandom(); }
-    
-    return ResponseEntity.ok(quote); 
-  }
-
-
   /** returns 0 if ROLE_ADMIN, else if USER id */
   private final int getUserId(Authentication auth)
   {
@@ -161,5 +121,41 @@ public class MiscController
     
     return userId;
   }
+
+  @GetMapping(value = "/count/files/owner")
+  public ResponseEntity<ItemCountTransfer> getOwnerAttachmentsCount(final Authentication authentication) 
+  { 
+    ItemCountTransfer ict = new ItemCountTransfer();
+
+    ict.setCurrent(attachmentRepository.countForOwnerOnly(userRepository.findByLoginName(authentication.getName()).getUserId()));
+    ict.setMaximum(variableService.getLong("Quota", "FILES_PER_MEMBER", 16));
+    
+    return ResponseEntity.ok(ict); 
+  }
+  
+  @GetMapping(value = "/max/file/size")
+  public ResponseEntity<ItemCountTransfer> getMaxFileSize() 
+  { 
+    ItemCountTransfer ict = new ItemCountTransfer();
+
+    ict.setCurrent(0);
+    ict.setMaximum(variableService.getLong("Quota", "FILE_SIZE", 1000));
+    
+    return ResponseEntity.ok(ict); 
+  }
+  
+  @GetMapping(value = { "/quote", "/quote/{id} "})
+  public ResponseEntity<Quote> getQuote(@PathVariable("id") Optional<Integer> quoteId) 
+  { 
+    Quote quote = null;
+    
+    if (quoteId.isPresent()) { quote = quoteRepository.findById(quoteId.get().intValue()); }
+    
+    if (quote == null) { quote = quoteRepository.getRandom(); }
+    
+    return ResponseEntity.ok(quote); 
+  }
+
+
 
 }

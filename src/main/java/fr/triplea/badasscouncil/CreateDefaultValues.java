@@ -58,6 +58,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 
     addVariableIfMissing("Quota", "MEMBERS_COUNT", "42", "Maximum count for members.");
     addVariableIfMissing("Quota", "FILES_PER_MEMBER", "16", "Maximum files per members.");
+    addVariableIfMissing("Quota", "FILE_SIZE", "1000", "Maximum file size (in MB).");
 
     
     addQuote(1, "What happens in your Bad Ass instance... will eventually be purged.");

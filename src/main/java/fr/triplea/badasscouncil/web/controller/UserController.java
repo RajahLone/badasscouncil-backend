@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
-import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dao.RefreshTokenRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
@@ -43,6 +42,7 @@ import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.UserStatus;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
+import fr.triplea.badasscouncil.web.service.VariableService;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,7 +68,7 @@ public class UserController
   private PreferenceService preferenceService;
 
   @Autowired
-  private VariableRepository variableRepository;
+  private VariableService variableService;
   
   @Value("${password.salt}")
   private String salt;
@@ -316,9 +316,7 @@ public class UserController
 
     long cur = userRepository.count();
     
-    long max = 42;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 42; }
+    long max = variableService.getLong("Quota", "MEMBERS_COUNT", 42);
 
     User found = null; 
 

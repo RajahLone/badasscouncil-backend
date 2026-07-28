@@ -23,7 +23,6 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.RoleRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
-import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.PasswordTransfer;
 import fr.triplea.badasscouncil.dto.RefreshTokenTransfer;
 import fr.triplea.badasscouncil.dto.UserCredentials;
@@ -36,6 +35,7 @@ import fr.triplea.badasscouncil.security.MyUserDetailsService;
 import fr.triplea.badasscouncil.security.jwt.JwtTokenUtil;
 import fr.triplea.badasscouncil.security.jwt.RefreshTokenException;
 import fr.triplea.badasscouncil.security.jwt.RefreshTokenService;
+import fr.triplea.badasscouncil.web.service.VariableService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
@@ -69,7 +69,7 @@ public class AuthController
   private UserRepository userRepository;
 
   @Autowired
-  private VariableRepository variableRepository;
+  private VariableService variableService;
 
   @Autowired
   private LocaleResolver localeResolver;
@@ -83,8 +83,8 @@ public class AuthController
   {
     Locale locale = localeResolver.resolveLocale(request);
 
-    String captchaQuestion = variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_QUESTION");
-    String captchaResponse = variableRepository.findByFamilyAndCode("CAPTCHA", "LOGIN_RESPONSE");
+    String captchaQuestion = variableService.getString("CAPTCHA", "LOGIN_QUESTION");
+    String captchaResponse = variableService.getString("CAPTCHA", "LOGIN_RESPONSE");
     String captchaAnswer = uc.getAnswer(); 
     
     if (captchaQuestion == null) { captchaQuestion = ""; } else { captchaQuestion = captchaQuestion.trim(); }
@@ -301,8 +301,8 @@ public class AuthController
    
     PasswordTransfer pt = new PasswordTransfer();
  
-    String captchaQuestion = variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_QUESTION");
-    String captchaResponse = variableRepository.findByFamilyAndCode("CAPTCHA", "SUBSCRIBE_RESPONSE");
+    String captchaQuestion = variableService.getString("CAPTCHA", "SUBSCRIBE_QUESTION");
+    String captchaResponse = variableService.getString("CAPTCHA", "SUBSCRIBE_RESPONSE");
     String captchaAnswer = user.getAnswer(); 
     
     if (captchaQuestion == null) { captchaQuestion = ""; } else { captchaQuestion = captchaQuestion.trim(); }
@@ -332,9 +332,7 @@ public class AuthController
         
     long cur = userRepository.count();
   
-    long max = 42;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "MEMBERS_COUNT")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 42; }
+    long max = variableService.getLong("Quota", "MEMBERS_COUNT", 42);
 
     if (max > cur) { pt.setError(messageSource.getMessage("account.subscribe.quota.reached", null, locale)); return ResponseEntity.ok(pt); }
     

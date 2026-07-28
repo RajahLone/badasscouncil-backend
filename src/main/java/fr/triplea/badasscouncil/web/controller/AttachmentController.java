@@ -37,11 +37,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 
 import fr.triplea.badasscouncil.dao.UserRepository;
-import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.Pagination;
-import fr.triplea.badasscouncil.dto.UserList;
 import fr.triplea.badasscouncil.dto.AttachmentFile;
 import fr.triplea.badasscouncil.dto.AttachmentShort;
 import fr.triplea.badasscouncil.dto.AttachmentTransfer;
@@ -50,6 +48,7 @@ import fr.triplea.badasscouncil.model.Attachment;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
+import fr.triplea.badasscouncil.web.service.VariableService;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
@@ -71,7 +70,7 @@ public class AttachmentController
   private UserRepository userRepository;
 
   @Autowired
-  private VariableRepository variableRepository;
+  private VariableService variableService;
 
   @Autowired
   private LocaleResolver localeResolver;
@@ -261,9 +260,7 @@ public class AttachmentController
   { 
     long cur = attachmentRepository.countForOwnerOnly(this.getUserId(authentication));
     
-    long max = 16;
-    try { max = Long.parseLong(variableRepository.findByFamilyAndCode("Quota", "FILES_PER_MEMBER")); } catch (Exception e) { max = -1; }
-    if (max < 1) { max = 16; }
+    long max = variableService.getLong("Quota", "FILES_PER_MEMBER", 16);
 
     User user = null;
 
@@ -453,7 +450,14 @@ public class AttachmentController
           chunkFile.delete(); 
         }
         
-        if (chunkFile.exists()) { if (chunkFile.length() == data.getSize()) { succes = true;  } } 
+        long curSize = 0;
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000);
+        
+        File[] files = dir.listFiles();
+        
+        if (files != null) { if (files.length > 0) { for (int f = 0; f < files.length; f++) { curSize += files[f].length(); } } }
+        
+        if (curSize > maxSize) { chunkFile.delete(); } else { if (chunkFile.exists()) { if (chunkFile.length() == data.getSize()) { succes = true;  } } }
         
         if (succes) { mt.setInfo(messageSource.getMessage("chunk.upload.success", new Object[] { index, name }, locale)); } 
                else { mt.setError(messageSource.getMessage("chunk.upload.failed", new Object[] { index, name }, locale)); }
@@ -490,6 +494,24 @@ public class AttachmentController
         HomeInformationTransfer mt = new HomeInformationTransfer();
 
         File dir = new File("../uploads-temp/" + fileId + "-" + name);
+
+        long curSize = 0;
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000);
+        
+        File[] files = dir.listFiles();
+        
+        if (files != null) { if (files.length > 0) { for (int f = 0; f < files.length; f++) { curSize += files[f].length(); } } }
+
+        if (curSize > maxSize)
+        {
+          for (int f = 0; f < files.length; f++) { files[f].delete(); }
+          
+          dir.delete();
+          
+          mt.setError(messageSource.getMessage("attachment.exceeds.maxsize", new Object[] { name }, locale));          
+          
+          return ResponseEntity.ok(mt);
+        }
         
         String nomLocal = UUID.nameUUIDFromBytes(("" + fileId + "-" + name).getBytes()).toString() + ".zip";
 
