@@ -122,7 +122,10 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
    
   @NativeQuery("SELECT DISTINCT a.file_id FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND a.life_span > 0 AND (a.created_on::timestamp + CONCAT('', a.life_span, ' day')::interval) < NOW() ")
   List<Integer> findLifeSpanFinished();
-  
+
+  @NativeQuery("SELECT DISTINCT COUNT(a.*) AS nombre FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND (a.user_id = :owner) ")
+  List<Integer> findByOwner(@Param("owner") Integer owner);  
+
   @Override
   void delete(Attachment file);
   

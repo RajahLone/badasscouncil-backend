@@ -385,6 +385,8 @@ public class AuthController
     found.setPhone(user.getPhone());
     found.setEmail(user.getEmail());
     
+    found.setStorageLimit(variableService.getInt("Quota", "STORAGE_DEFAULT", 0));
+    
     cur = userRepository.count(user.getLoginName().trim().toUpperCase());
     
     if (cur > 0) { pt.setError(messageSource.getMessage("account.subscribe.already.login", null, locale)); return ResponseEntity.ok(pt); }

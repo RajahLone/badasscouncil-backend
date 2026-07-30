@@ -119,6 +119,10 @@ public class User
 
   @Column(length = 128)
   private String email;
+  
+
+  private Integer storageLimit = 0; // -1 = not allowed to upload, 0 = limited only by Quota FILES_PER_MEMBER * (MAX_)FILE_SIZE, > 0 = limit in GB
+
 
   
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
@@ -236,6 +240,8 @@ public class User
   public String getEmail() { return this.email; }
   
    
+  public void setStorageLimit(int n) { this.storageLimit = Integer.valueOf(n); }
+  public Integer getStorageLimit() { return this.storageLimit; }
    
   
   @Transient

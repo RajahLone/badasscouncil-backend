@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tika.mime.MediaType;
@@ -48,6 +47,7 @@ import fr.triplea.badasscouncil.model.Attachment;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
+import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.web.service.VariableService;
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,6 +68,9 @@ public class AttachmentController
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private VariableService variableService;
@@ -125,10 +128,10 @@ public class AttachmentController
       switch (sortType.intValue()) 
       { 
         case 1: 
-          files = attachmentRepository.findByOwnerMostRecent(this.getUserId(authentication), nameFilter, statusFilter, offset, length); 
+          files = attachmentRepository.findByOwnerMostRecent(userService.getUserId(authentication), nameFilter, statusFilter, offset, length); 
           break;
         default: 
-          files = attachmentRepository.findByOwnerSortedByName(this.getUserId(authentication), nameFilter, statusFilter, offset, length); 
+          files = attachmentRepository.findByOwnerSortedByName(userService.getUserId(authentication), nameFilter, statusFilter, offset, length); 
           break;
       }
     }
@@ -162,7 +165,7 @@ public class AttachmentController
       preferenceService.set(Preference.FILES_PER_MEMBER, "50", authentication);
     }
 
-    int items = attachmentRepository.countForEveryoneWithFilters(this.getUserId(authentication), nameFilter, statusFilter);
+    int items = attachmentRepository.countForEveryoneWithFilters(userService.getUserId(authentication), nameFilter, statusFilter);
      
     int pages = 0;
     
@@ -182,7 +185,7 @@ public class AttachmentController
            
     if (p != null) 
     { 
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
             
       if ((userId == 0) || (p.getOwnerId() == userId) || p.isShared())
       {
@@ -224,7 +227,7 @@ public class AttachmentController
     
     if (p != null) 
     {
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || (p.ownerId() == userId))
       {
@@ -243,7 +246,7 @@ public class AttachmentController
     
     if (p != null) 
     { 
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || (p.ownerId() == userId))
       {
@@ -258,7 +261,7 @@ public class AttachmentController
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Integer> create(@RequestBody(required = true) AttachmentTransfer file, final Authentication authentication, HttpServletRequest request) 
   { 
-    long cur = attachmentRepository.countForOwnerOnly(this.getUserId(authentication));
+    long cur = attachmentRepository.countForOwnerOnly(userService.getUserId(authentication));
     
     long max = variableService.getLong("Quota", "FILES_PER_MEMBER", 16);
 
@@ -302,7 +305,7 @@ public class AttachmentController
     
     if (found != null)
     {
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || ((file.ownerId() == userId) && found.getUser().getUserId() == userId))
       {
@@ -420,7 +423,7 @@ public class AttachmentController
     {
       found.setEnabled(true);
       
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || (found.getOwnerId() == userId))
       {
@@ -455,7 +458,7 @@ public class AttachmentController
         }
         
         long curSize = 0;
-        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1024 * 1024;
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1048576;
         
         File[] files = dir.listFiles();
         
@@ -491,7 +494,7 @@ public class AttachmentController
     {
       found.setEnabled(true);
       
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || (found.getOwnerId() == userId))
       {
@@ -500,7 +503,7 @@ public class AttachmentController
         File dir = new File("../uploads-temp/" + fileId + "-" + name);
 
         long curSize = 0;
-        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1024 * 1024;
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1048576;
         
         File[] files = dir.listFiles();
         
@@ -513,6 +516,16 @@ public class AttachmentController
           dir.delete();
           
           mt.setError(messageSource.getMessage("attachment.exceeds.maxsize", new Object[] { name }, locale));          
+          
+          return ResponseEntity.ok(mt);
+        }
+        else if (!userService.canUpload(authentication))
+        {
+         for (int f = 0; f < files.length; f++) { files[f].delete(); }
+          
+          dir.delete();
+          
+          mt.setError(messageSource.getMessage("storage.limit.reached", new Object[] { name }, locale));          
           
           return ResponseEntity.ok(mt);
         }
@@ -608,7 +621,7 @@ public class AttachmentController
     
     if (found != null)
     {
-      int userId = this.getUserId(authentication);
+      int userId = userService.getUserId(authentication);
 
       if ((userId == 0) || (found.getUser().getUserId() == userId))
       {
@@ -636,26 +649,5 @@ public class AttachmentController
     return request.getRemoteAddr();
   }
 
-  /** returns 0 if ROLE_ADMIN, else if USER id */
-  private final int getUserId(Authentication auth)
-  {
-    int userId = -1; // -1 = not found
-    
-    if (auth != null)
-    {
-      User found = userRepository.findByLoginName(auth.getName());
-      
-      if (found != null)
-      {
-        userId = found.getUserId();
-        
-        List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
-
-        if (roles.contains("ROLE_ADMIN")) { userId = 0; }
-      }
-    }
-    
-    return userId;
-  }
   
 }

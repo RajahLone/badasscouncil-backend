@@ -1,9 +1,7 @@
 package fr.triplea.badasscouncil.web.controller;
 
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +18,7 @@ import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.ItemCountTransfer;
 import fr.triplea.badasscouncil.model.Quote;
-import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.web.service.VariableService;
 
 @RestController
@@ -33,6 +31,9 @@ public class MiscController
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private AttachmentRepository attachmentRepository;
@@ -95,31 +96,10 @@ public class MiscController
   { 
     ItemCountTransfer ict = new ItemCountTransfer();
 
-    ict.setCurrent(attachmentRepository.countForEveryone(this.getUserId(authentication)));
+    ict.setCurrent(attachmentRepository.countForEveryone(userService.getUserId(authentication)));
     ict.setMaximum(variableService.getLong("Quota", "FILES_PER_MEMBER", 16));
     
     return ResponseEntity.ok(ict); 
-  }
-  /** returns 0 if ROLE_ADMIN, else if USER id */
-  private final int getUserId(Authentication auth)
-  {
-    int userId = -1; // -1 = not found
-    
-    if (auth != null)
-    {
-      User found = userRepository.findByLoginName(auth.getName());
-      
-      if (found != null)
-      {
-        userId = found.getUserId();
-        
-        List<String> roles = auth.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
-
-        if (roles.contains("ROLE_ADMIN")) { userId = 0; }
-      }
-    }
-    
-    return userId;
   }
 
   @GetMapping(value = "/count/files/owner")
@@ -129,6 +109,7 @@ public class MiscController
 
     ict.setCurrent(attachmentRepository.countForOwnerOnly(userRepository.findByLoginName(authentication.getName()).getUserId()));
     ict.setMaximum(variableService.getLong("Quota", "FILES_PER_MEMBER", 16));
+    ict.setCapability(userService.canUpload(authentication));
     
     return ResponseEntity.ok(ict); 
   }

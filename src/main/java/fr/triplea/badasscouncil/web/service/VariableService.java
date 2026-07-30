@@ -24,5 +24,14 @@ public class VariableService
 
     return value;
   }
+
+  public Integer getInt(String type, String key, int defaultValue)
+  {
+    Integer value = Integer.valueOf(defaultValue);
+    
+    try { value = Integer.parseInt(variableRepository.findByFamilyAndCode(type, key)); } catch (Exception e) { value = Integer.valueOf(defaultValue); }
+
+    return value;
+  }
       
 }

@@ -22,6 +22,7 @@ import fr.triplea.badasscouncil.dao.VariableRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.VariableFamily;
 import fr.triplea.badasscouncil.model.Variable;
+import fr.triplea.badasscouncil.web.service.VariableService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -31,6 +32,9 @@ public class VariableController
 
   @Autowired
   private VariableRepository variableRepository;
+
+  @Autowired
+  private VariableService variableService;
 
   @Autowired
   private LocaleResolver localeResolver;
@@ -135,4 +139,10 @@ public class VariableController
     return ResponseEntity.notFound().build(); 
   }
 
+
+  @GetMapping(value = "/get/default/storage")
+  @PreAuthorize("hasRole('REGUL')")
+  public String getDefaultStorage() { return variableService.getInt("Quota", "STORAGE_DEFAULT", 0).toString(); }
+
+  
 }

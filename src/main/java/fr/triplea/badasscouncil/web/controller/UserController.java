@@ -293,6 +293,8 @@ public class UserController
           u.setEmail("");
         }
       }
+      
+      u.setStorageLimit(found.getStorageLimit());
        
       List<Role> u_roles = found.getRoles();       
       
@@ -365,6 +367,8 @@ public class UserController
           found.setCountry(user.getCountry());
           found.setPhone(user.getPhone());
           found.setEmail(user.getEmail());
+          
+          found.setStorageLimit(user.getStorageLimit());
          
           Role userRole = roleRepository.findByLabel("ROLE_USER");
           Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
@@ -448,6 +452,8 @@ public class UserController
       found.setPhone(user.getPhone());
       found.setEmail(user.getEmail());
       
+      found.setStorageLimit(user.getStorageLimit());
+      
       Role userRole = roleRepository.findByLabel("ROLE_USER");
       Role adminRole = roleRepository.findByLabel("ROLE_ADMIN");
       Role regulRole = roleRepository.findByLabel("ROLE_REGUL");
@@ -528,7 +534,7 @@ public class UserController
   @PutMapping(value = "/activate")
   @PreAuthorize("hasRole('REGUL')")
   @Transactional
-  public ResponseEntity<Object> update(@RequestBody List<Integer> usersIds, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> activate(@RequestBody List<Integer> usersIds, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 

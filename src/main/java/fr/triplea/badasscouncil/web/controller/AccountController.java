@@ -92,6 +92,8 @@ public class AccountController
         p.setCountry(found.getCountry());
         p.setPhone(found.getPhone());
         p.setEmail(found.getEmail());
+        
+        p.setStorageLimit(found.getStorageLimit());
                  
         p.setLastActivityOn(found.hasLastActivityOn() ? dtf.format(found.getLastActivityOn()) : "");
        
@@ -135,7 +137,6 @@ public class AccountController
         found.setCountry(user.getCountry());
         found.setPhone(user.getPhone());
         found.setEmail(user.getEmail());
-         
                
         userRepository.saveAndFlush(found);
        

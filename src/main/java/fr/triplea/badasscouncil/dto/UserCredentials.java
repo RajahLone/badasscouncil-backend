@@ -27,7 +27,7 @@ public class UserCredentials
   private String error;
   
   private String answer;
-  
+    
 
   public UserCredentials() {}
    

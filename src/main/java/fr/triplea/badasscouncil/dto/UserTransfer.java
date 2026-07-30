@@ -29,6 +29,8 @@ public class UserTransfer
   private String country;
   private String phone;
   private String email;
+  
+  private int storageLimit;
    
   private String answer;
   
@@ -100,6 +102,11 @@ public class UserTransfer
   
   public String getEmail() { return email; }
   public void setEmail(String str) { this.email = str; }
+
+  
+  public int getStorageLimit() { return storageLimit; }
+  public void setStorageLimit(int limit) { this.storageLimit = limit; }
+
   
   public String getAnswer() { return answer; }
   public void setAnswer(String str) { this.answer = str; }
