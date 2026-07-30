@@ -81,6 +81,8 @@ public class Attachment
   private Integer destId;
 
   private Boolean shared = false;
+  
+  private Integer lifeSpan;
 
   
   public Attachment() { super(); }
@@ -154,6 +156,9 @@ public class Attachment
   @Transient
   public boolean isShared() { return (getShared().booleanValue()); }
 
+  public void setLifeSpan(int n) { this.lifeSpan = Integer.valueOf(n); }
+  public Integer getLifeSpan() { return this.lifeSpan; }
+  
 
   @Override
   public int hashCode() 
@@ -169,6 +174,7 @@ public class Attachment
     result = (prime * result) + ((getArchiveName() == null) ? 0 : getArchiveName().hashCode());
     result = (prime * result) + ((getVersionNumber() == null) ? 0 : getVersionNumber().hashCode());
     result = (prime * result) + ((getShared() == null) ? 0 : getShared().hashCode());
+    result = (prime * result) + ((getLifeSpan() == null) ? 0 : getLifeSpan().hashCode());
     return result;
   }
 
@@ -198,6 +204,7 @@ public class Attachment
            .append(", archiveName=").append(archiveName)
            .append(", localName=").append(localName)
            .append(", version=").append(versionNumber)
+           .append(", lifeSpan=").append(lifeSpan)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)
            .append(shared ? "" : ", shared")

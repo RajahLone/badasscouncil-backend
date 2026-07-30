@@ -14,6 +14,7 @@ public record AttachmentUpdate
   String localName,
   int versionNumber,
   int destId,
-  boolean shared
+  boolean shared,
+  int lifeSpan
 ) 
 { }

@@ -1,0 +1,15 @@
+[Unit]
+Description=badasscouncil-backend
+After=syslog.target network.target
+
+[Service]
+User=root
+Group=root
+
+Type=exec
+ExecStart=java -jar /home/rajah/badasscouncil-backend-0.1.0.war
+WorkingDirectory=/home/rajah/badasscouncil-backend
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

@@ -47,7 +47,8 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.local_name, "
       + "a.version_number, "
       + "a.dest_id, "
-      + "a.shared "
+      + "a.shared,"
+      + "a.life_span "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.file_id = :id "
@@ -67,7 +68,8 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.local_name, "
       + "a.version_number, "
       + "a.dest_id, "
-      + "a.shared "
+      + "a.shared,"
+      + "CASE WHEN a.life_span > 0 THEN a.life_span - (EXTRACT(epoch FROM (SELECT (NOW() - a.created_on)))/86400)::int ELSE 0 END AS life_span "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.enabled IS TRUE "
@@ -91,7 +93,8 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "a.local_name, "
       + "a.version_number, "
       + "a.dest_id, "
-      + "a.shared "
+      + "a.shared,"
+      + "CASE WHEN a.life_span > 0 THEN a.life_span - (EXTRACT(epoch FROM (SELECT (NOW() - a.created_on)))/86400)::int ELSE 0 END AS life_span "
       + "FROM badasscouncil.attachments AS a "
       + "INNER JOIN badasscouncil.users AS u ON a.user_id = u.user_id "
       + "WHERE a.enabled IS TRUE "
@@ -113,9 +116,14 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Integer>
       + "  AND a.enabled IS TRUE ")
   AttachmentFile findByIdForUpload(@Param("file") Integer file);
   
+  
+  @NativeQuery("SELECT DISTINCT a.file_id FROM badasscouncil.attachments AS a WHERE a.enabled IS FALSE ")
+  List<Integer> findDisabled();
    
+  @NativeQuery("SELECT DISTINCT a.file_id FROM badasscouncil.attachments AS a WHERE a.enabled IS TRUE AND a.life_span > 0 AND (a.created_on::timestamp + CONCAT('', a.life_span, ' day')::interval) < NOW() ")
+  List<Integer> findLifeSpanFinished();
   
   @Override
-  void delete(Attachment production);
+  void delete(Attachment file);
   
 }

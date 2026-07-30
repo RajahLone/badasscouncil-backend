@@ -9,6 +9,7 @@ public record AttachmentTransfer
   String archiveName,
   String localName,
   int versionNumber,
-  boolean shared
+  boolean shared,
+  int lifeSpan
 ) 
 { }

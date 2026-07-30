@@ -1,6 +1,7 @@
 package fr.triplea.badasscouncil;
 
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -44,8 +45,11 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addRoleIfMissing("ROLE_USER");
         
     
-    addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris", "");
+    String tz = addVariableIfMissing("Application", "TIME_ZONE", "Europe/Paris", "");
         
+    if (tz != null) { TimeZone.setDefault(TimeZone.getTimeZone(tz)); } 
+    
+    
     addVariableIfMissing("Messages", "HOME_ERROR", " ", "If not blank, this error message will be displayed for all (even not logged people) on the home page.");
     addVariableIfMissing("Messages", "HOME_WARN", " ", "If not blank, this warning message will be displayed for all (even not logged people) on the home page.");
     addVariableIfMissing("Messages", "HOME_INFO", " ", "If not blank, this information message will be displayed for all (even not logged people) on the home page.");
@@ -92,7 +96,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   }
 
   @Transactional
-  public void addVariableIfMissing(final String type, final String code, final String content, final String notes) 
+  public String addVariableIfMissing(final String type, final String code, final String content, final String notes) 
   {
     String str = variableRepository.findByFamilyAndCode(type, code);
     
@@ -107,6 +111,8 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       
       variableRepository.saveAndFlush(variable);
     }
+    
+    return str;
   }
 
   @Transactional

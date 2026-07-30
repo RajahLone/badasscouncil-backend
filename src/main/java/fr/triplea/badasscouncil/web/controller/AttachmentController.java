@@ -281,6 +281,9 @@ public class AttachmentController
       fresh.setLocalName(null); 
       fresh.setVersionNumber(0);
       
+      fresh.setShared(file.shared());
+      fresh.setLifeSpan(file.lifeSpan());
+      
       attachmentRepository.saveAndFlush(fresh);
 
       return ResponseEntity.ok(Integer.valueOf(fresh.getFileId()));
@@ -319,6 +322,7 @@ public class AttachmentController
           found.setRecipient(dest);
           
           found.setShared(file.shared());
+          found.setLifeSpan(file.lifeSpan());
                 
           attachmentRepository.saveAndFlush(found);
           
@@ -451,13 +455,13 @@ public class AttachmentController
         }
         
         long curSize = 0;
-        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000);
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1024 * 1024;
         
         File[] files = dir.listFiles();
         
         if (files != null) { if (files.length > 0) { for (int f = 0; f < files.length; f++) { curSize += files[f].length(); } } }
         
-        if (curSize > maxSize) { chunkFile.delete(); } else { if (chunkFile.exists()) { if (chunkFile.length() == data.getSize()) { succes = true;  } } }
+        if (curSize > maxSize) { chunkFile.delete(); succes = false; } else { if (chunkFile.exists()) { if (chunkFile.length() == data.getSize()) { succes = true;  } } }
         
         if (succes) { mt.setInfo(messageSource.getMessage("chunk.upload.success", new Object[] { index, name }, locale)); } 
                else { mt.setError(messageSource.getMessage("chunk.upload.failed", new Object[] { index, name }, locale)); }
@@ -496,7 +500,7 @@ public class AttachmentController
         File dir = new File("../uploads-temp/" + fileId + "-" + name);
 
         long curSize = 0;
-        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000);
+        long maxSize = variableService.getLong("Quota", "FILE_SIZE", 1000) * 1024 * 1024;
         
         File[] files = dir.listFiles();
         
@@ -596,7 +600,7 @@ public class AttachmentController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Object> delete(@PathVariable("id") int fileId, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Object> disable(@PathVariable("id") int fileId, final Authentication authentication, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 
@@ -609,6 +613,8 @@ public class AttachmentController
       if ((userId == 0) || (found.getUser().getUserId() == userId))
       {
         found.setEnabled(false); 
+        
+        attachmentRepository.saveAndFlush(found);
         
         HomeInformationTransfer mt = new HomeInformationTransfer();
         mt.setInfo(messageSource.getMessage("attachment.deleted", null, locale));

@@ -483,7 +483,7 @@ public class UserController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('REGUL')")
-  public ResponseEntity<Map<String, Boolean>> disableUser(@PathVariable("id") int userId, final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<Map<String, Boolean>> disable(@PathVariable("id") int userId, final Authentication authentication, HttpServletRequest request) 
   { 
     if (authentication == null) { return ResponseEntity.notFound().build(); }
 

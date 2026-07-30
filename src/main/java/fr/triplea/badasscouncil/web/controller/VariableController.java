@@ -116,7 +116,7 @@ public class VariableController
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Object> deleteVariable(@PathVariable("id") int varId, HttpServletRequest request) 
+  public ResponseEntity<Object> delete(@PathVariable("id") int varId, HttpServletRequest request) 
   { 
     Locale locale = localeResolver.resolveLocale(request);
 

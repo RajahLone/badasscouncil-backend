@@ -16,7 +16,8 @@ public record AttachmentShort
   String localName,
   Integer versionNumber,
   Integer destId,
-  Boolean shared
+  Boolean shared,
+  Integer lifeSpan
 ) 
 { 
   public Attachment toAttachment(boolean owning) 
@@ -39,6 +40,7 @@ public record AttachmentShort
     p.setDestId((destId != ownerId) && (destId != null) ? destId : null);
     
     p.setShared(shared);
+    p.setLifeSpan(lifeSpan);
     
     return p;
   }  
