@@ -3,7 +3,7 @@ package fr.triplea.badasscouncil.model;
 public enum RoomPurgeMethod 
 {
   
-  NEVER("NEVER"), MESSAGES_LIMITED("MESSAGES_LIMITED"), TIME_LIMITED("TIME_LIMITED"), WHEN_DEPOPULATED("Sleeping");
+  NEVER("NEVER"), MESSAGES_LIMITED("MESSAGES_LIMITED"), TIME_LIMITED("TIME_LIMITED"), WHEN_DEPOPULATED("WHEN_DEPOPULATED");
 
   private String purgeMethod;
 

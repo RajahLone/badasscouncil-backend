@@ -39,7 +39,7 @@ public class MessageController
   
   @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
-  public List<NickNameOptionList> getOptionList(final Authentication authentication) 
+  public List<NickNameOptionList> getNickNames(final Authentication authentication) 
   { 
     if (authentication != null)
     {

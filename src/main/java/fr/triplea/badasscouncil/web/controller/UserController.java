@@ -542,7 +542,7 @@ public class UserController
     {
       if (usersIds.size() > 0)
       {
-        userRepository.setFlagArrives(usersIds);
+        userRepository.activate(usersIds);
         userRepository.flush();
         
         Map<String, Boolean> response = new HashMap<>();

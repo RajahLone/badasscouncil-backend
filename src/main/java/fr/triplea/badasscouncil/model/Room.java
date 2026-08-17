@@ -108,6 +108,8 @@ public class Room
   
   public void setPasswordHash(String str) { if (str != null) { this.passwordHash = StringUtils.truncate(str, 256); } }
   public String getPasswordHash() { return this.passwordHash; }
+  @Transient
+  public boolean hasPassword() { if (this.passwordHash == null) { return false; } return (this.passwordHash.length() > 0); }
 
   public void setTopic(String str) { if (str != null) { this.topic = StringUtils.truncate(str, 512); } }
   public String getTopic() { return this.topic; }

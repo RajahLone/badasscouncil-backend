@@ -124,7 +124,7 @@ public interface UserRepository extends JpaRepository<User, Integer>
 
   @Modifying
   @NativeQuery("UPDATE badasscouncil.users SET status = 'ACTIVE'::badasscouncil.user_status WHERE user_id IN :ids ")
-  void setFlagArrives(@Param("ids") List<Integer> usersIds);
+  void activate(@Param("ids") List<Integer> usersIds);
 
 
 }
