@@ -51,16 +51,11 @@ public class AccountController
   @Autowired
   private MessageSource messageSource;
 
-  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
-  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form")
-  public ResponseEntity<UserTransfer> getForm(final Authentication authentication, HttpServletRequest request) 
+  public ResponseEntity<UserTransfer> getForm(final Authentication authentication) 
   {         
-    Locale locale = localeResolver.resolveLocale(request);
-
-    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
-
     if (authentication != null)
     {
       User found = userRepository.findByLoginName(authentication.getName());

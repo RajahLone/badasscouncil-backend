@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.badasscouncil.dao.MessageRepository;
+import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dto.MessageShort;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.model.Message;
+import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.User;
 
 @RestController
@@ -35,7 +37,10 @@ public class MessageController
 
   @Autowired
   private UserRepository userRepository;
- 
+
+  @Autowired
+  private RoomRepository roomRepository;
+
   
   @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
@@ -54,9 +59,9 @@ public class MessageController
     return new ArrayList<NickNameOptionList>();
   }
 
-  @GetMapping(value = "/new/{last}")
+  @GetMapping(value = "/new/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getNew(@PathVariable(name="last") int l, final Authentication authentication)
+  public List<MessageShort> getNew(@PathVariable(name="room") int r, @PathVariable(name="last") int l, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -66,7 +71,7 @@ public class MessageController
       
       if ((found != null) && (l >= 0)) 
       {         
-        mlist = messageRepository.findNew(0, found.getUserId(), l);
+        mlist = messageRepository.findNew(r, found.getUserId(), l);
       }
     }
 
@@ -75,9 +80,9 @@ public class MessageController
     return mlist; 
   }
 
-  @PostMapping(value = "/add/{last}")
+  @PostMapping(value = "/add/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addMessage(@RequestBody(required = true) MessageShort message, @PathVariable("last") int l, final Authentication authentication)
+  public List<MessageShort> addMessage(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShort message, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -85,7 +90,9 @@ public class MessageController
     {
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if ((found != null) && (l >= 0)) 
+      Room room = roomRepository.findById(r);
+      
+      if ((room != null) && (found != null) && (l >= 0)) 
       { 
         if (found.getNickName().equals(message.nickName()))
         {
@@ -98,6 +105,7 @@ public class MessageController
             Message m = new Message();
             
             m.setMessageId(null);
+            m.setRoom(room);
             m.setUser(found);
             m.setContent(ligne);
             
@@ -108,7 +116,7 @@ public class MessageController
             messageRepository.saveAndFlush(m);
           }
           
-          mlist = messageRepository.findNew(0, found.getUserId(), l);
+          mlist = messageRepository.findNew(r, found.getUserId(), l);
         }
       }
     }

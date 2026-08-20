@@ -71,21 +71,25 @@ public class Room
 
   private Integer messagesLimit = 1000;
 
-  private Integer timeDuration = 1440;
+  private Integer timeDuration = 4321;
   
   public Room() { super(); }
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getCreatedOn() { return this.createdOn; }
+  @Transient
+  public boolean hasCreatedOn() { return (this.createdOn != null); }
   
   public void setUpdatedOn(LocalDateTime d) { this.updatedOn = d; }
   public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
+  @Transient
+  public boolean hasUpdatedOn() { return (this.updatedOn != null); }
   
   public void setRoomId(Integer id) { this.roomId = id; }
   public Integer getRoomId() { return this.roomId; }
@@ -100,7 +104,7 @@ public class Room
   
   
   public void setState(RoomState enu) { this.state = enu; }
-  public RoomState getStatus() { return this.state; }
+  public RoomState getState() { return this.state; }
  
   
   public void setName(String str) { if (str != null) { this.name = StringUtils.truncate(str, 128); } }

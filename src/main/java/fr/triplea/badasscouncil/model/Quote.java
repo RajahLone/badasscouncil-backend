@@ -48,7 +48,7 @@ public class Quote
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }

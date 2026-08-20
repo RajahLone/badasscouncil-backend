@@ -57,11 +57,14 @@ public class Message
 
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
   public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.createdOn; }
+  
+  public void setRoom(Room r) { this.room = r; }
+  public Room getRoom() { return this.room; }
   
   public void setMessageId(Integer id) { this.messageId = id; }
   public Integer getMessageId() { return this.messageId; }
@@ -111,6 +114,7 @@ public class Message
     final StringBuilder builder = new StringBuilder();
     
     builder.append("Message [id=").append(messageId)
+           .append(", room=").append(room)
            .append(", user=").append(user)
            .append(", dest=").append(dest)
            .append(", content=").append(content)

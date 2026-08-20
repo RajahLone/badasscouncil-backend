@@ -187,18 +187,13 @@ public class UserController
   }
 
 
-  private final DateTimeFormatter dtf_fr = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
-  private final DateTimeFormatter dft_en = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
+  private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
  
   @GetMapping(value = "/form/{id}")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<UserTransfer> getForm(@PathVariable("id") int userId, HttpServletRequest request, final Authentication authentication) 
   { 
     if (authentication == null) { return ResponseEntity.notFound().build(); }
-
-    Locale locale = localeResolver.resolveLocale(request);
-
-    DateTimeFormatter dtf = this.dtf_fr; if (locale == Locale.ENGLISH) { dtf = this.dft_en; }
     
     User found = userRepository.findById(userId);   
     

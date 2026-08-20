@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +79,44 @@ public class RoomController
     
     return new ArrayList<RoomTransfer>();
   }
+
+  private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
   
+  @GetMapping(value = "/form/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<RoomTransfer> getForm(@PathVariable("id") int roomId, final Authentication authentication) 
+  { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+    
+    Room found = roomRepository.findById(roomId);
+
+    User user = userRepository.findByLoginName(authentication.getName());
+
+    if ((found != null) && (user != null))
+    {
+      if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
+      {
+        RoomTransfer r = new RoomTransfer(
+            found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "",
+            found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "",
+            found.getRoomId().intValue(),   
+            found.getName(),
+            found.getState().getState(),
+            found.getUser().getUserId().intValue(),
+            "",
+            found.getTopic(),
+            found.getPurgeMethod().getPurgeMethod(),
+            found.getMessagesLimit().intValue(),
+            found.getTimeDuration().intValue()
+            );
+        
+        return ResponseEntity.ok(r);
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+
   @PostMapping(value = "/create")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Object> create(@RequestBody(required = true) RoomTransfer room, final Authentication authentication, HttpServletRequest request) 
@@ -95,10 +133,11 @@ public class RoomController
       
       found.setName(room.getName());
       found.setState(RoomState.ACTIVE);
+      found.setEnabled(true);
       
       found.setUser(user);
       
-      if (room.getPassword() != null) { if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } } 
+      if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } else { found.setPasswordHash(""); }
       
       found.setTopic(room.getTopic());
 
@@ -137,7 +176,7 @@ public class RoomController
     
     if ((found != null) && (user != null))
     {
-      if ((found.getRoomId().intValue() == roomId) && (found.getUser().equals(user) || user.hasRoles("REGUL", "ADMIN")))
+      if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
       {
         found.setName(room.getName());
 
@@ -145,6 +184,12 @@ public class RoomController
         else if (room.getState().equals("TRASHED")) { found.setState(RoomState.TRASHED); }
         else { found.setState(RoomState.ACTIVE); }
 
+        if (room.hasPassword()) 
+        { 
+          if (room.getPassword().equals("BLANK")) { found.setPasswordHash(""); }
+          else { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim()));  }
+        } 
+        
         found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); 
 
         found.setTopic(room.getTopic());
@@ -185,7 +230,7 @@ public class RoomController
 
     if ((found != null) && (user != null))
     {
-      if (found.getUser().equals(user) || user.hasRoles("REGUL", "ADMIN"))
+      if (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN"))
       {
         found.setEnabled(false); 
         

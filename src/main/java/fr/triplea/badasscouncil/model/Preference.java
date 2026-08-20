@@ -64,7 +64,7 @@ public class Preference
   
   
   @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.FRANCE);
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
   public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
