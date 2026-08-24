@@ -24,6 +24,7 @@ public interface RoomRepository extends JpaRepository<Room, Integer>
       + "  r.user_id AS owner_id, "
       + "  r.password_hash AS password, "
       + "  r.topic, "
+      + "  r.notes, "
       + "  r.purge_method, "
       + "  r.messages_limit, "
       + "  r.time_duration "

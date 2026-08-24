@@ -12,22 +12,24 @@ public class RoomTransfer
   private int ownerId;
   private String password;
   private String topic;
+  private String notes;
   
   private String purgeMethod;
   private int messagesLimit;
   private int timeDuration;
   
   
-  public RoomTransfer(String c, String u, int r, String n, String s, int o, String p, String t, String m, int l, int d) 
+  public RoomTransfer(String c, String u, int r, String na, String s, int o, String p, String t, String no, String m, int l, int d) 
   {
     this.createdOn = c;
     this.updatedOn = u;
     this.roomId = r;
-    this.name = n;
+    this.name = na;
     this.state = s;
     this.ownerId = o;
     this.password = p;
     this.topic = t;
+    this.notes = no;
     this.purgeMethod = m;
     this.messagesLimit = l;
     this.timeDuration = d;
@@ -59,6 +61,9 @@ public class RoomTransfer
   public String getTopic() { return topic; }
   public void setTopic(String str) { this.topic = str; }
   
+  public String getNotes() { return notes; }
+  public void setNotes(String str) { this.notes = str; }
+
   public String getPurgeMethod() { return purgeMethod; }
   public void setPurgeMethod(String str) { this.purgeMethod = str; }
 

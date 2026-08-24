@@ -65,6 +65,9 @@ public class Room
   @Column(length = 512)
   private String topic;
 
+  @Column(length = 4000)
+  private String notes;
+
 
   @Enumerated(EnumType.STRING) 
   private RoomPurgeMethod purgeMethod;
@@ -120,6 +123,9 @@ public class Room
   @Transient
   public boolean hasTopic() { if (this.topic == null) { return false; } return (this.topic.length() > 0); }
   
+  public void setNotes(String str) { if (str != null) { this.notes = StringUtils.truncate(str, 4000); } }
+  public String getNotes() { return this.notes; }
+  
 
   public void setPurgeMethod(RoomPurgeMethod enu) { this.purgeMethod = enu; }
   public RoomPurgeMethod getPurgeMethod() { return this.purgeMethod; }
@@ -138,6 +144,8 @@ public class Room
     final int prime = 42;
     int result = 1;
     result = (prime * result) + ((getName() == null) ? 0 : getName().hashCode());
+    result = (prime * result) + ((getTopic() == null) ? 0 : getTopic().hashCode());
+    result = (prime * result) + ((getNotes() == null) ? 0 : getNotes().hashCode());
     return result;
   }
 
@@ -161,6 +169,8 @@ public class Room
     
     builder.append("Room [id=").append(roomId)
            .append(", name=").append(name)
+           .append(", topic=").append(topic)
+           .append(", notes=").append(notes)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)
            .append(enabled ? "" : ", disabled")

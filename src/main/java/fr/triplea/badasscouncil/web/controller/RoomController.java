@@ -105,6 +105,7 @@ public class RoomController
             found.getUser().getUserId().intValue(),
             "",
             found.getTopic(),
+            found.getNotes(),
             found.getPurgeMethod().getPurgeMethod(),
             found.getMessagesLimit().intValue(),
             found.getTimeDuration().intValue()
@@ -140,6 +141,7 @@ public class RoomController
       if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } else { found.setPasswordHash(""); }
       
       found.setTopic(room.getTopic());
+      found.setNotes(room.getNotes());
 
       if (room.getPurgeMethod().equals("MESSAGES_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.MESSAGES_LIMITED); }
       else if (room.getPurgeMethod().equals("TIME_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.TIME_LIMITED); }
@@ -193,6 +195,7 @@ public class RoomController
         found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); 
 
         found.setTopic(room.getTopic());
+        found.setNotes(room.getNotes());
 
         if (room.getPurgeMethod().equals("MESSAGES_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.MESSAGES_LIMITED); }
         else if (room.getPurgeMethod().equals("TIME_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.TIME_LIMITED); }

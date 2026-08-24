@@ -108,7 +108,6 @@ public class Variable
     if (getFamily() == null) { if (v.getFamily() == null) { return false; } } else if (!getFamily().equals(v.getFamily())) { return false; }
     if (getCode() == null) { if (v.getCode() == null) { return false; } } else if (!getCode().equals(v.getCode())) { return false; }
     if (getContent() == null) { if (v.getContent() == null) { return false; } } else if (!getContent().equals(v.getContent())) { return false; }
-    if (getNotes() == null) { if (v.getNotes() == null) { return false; } } else if (!getNotes().equals(v.getNotes())) { return false; }
     
     return true;
   }
