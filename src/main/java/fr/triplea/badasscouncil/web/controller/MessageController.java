@@ -63,6 +63,8 @@ public class MessageController
   @PreAuthorize("hasRole('USER')")
   public List<MessageShort> getNew(@PathVariable(name="room") int r, @PathVariable(name="last") int l, final Authentication authentication)
   { 
+    // TODO: restricted by password
+    
     List<MessageShort> mlist = null;
 
     if (authentication != null)
@@ -84,6 +86,9 @@ public class MessageController
   @PreAuthorize("hasRole('USER')")
   public List<MessageShort> addMessage(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShort message, final Authentication authentication)
   { 
+    // TODO: restricted by password
+    // TODO: pagination (500 per 500, backlogging)
+    
     List<MessageShort> mlist = null;
 
     if ((authentication != null) && (message != null))

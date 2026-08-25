@@ -530,7 +530,7 @@ public class AttachmentController
           return ResponseEntity.ok(mt);
         }
         
-        String nomLocal = UUID.nameUUIDFromBytes(("" + fileId + "-" + name).getBytes()).toString() + ".zip";
+        String nomLocal = "" + userId + "-" + UUID.nameUUIDFromBytes(("" + fileId + "-" + name).getBytes()).toString() + fileId;
 
         File fic = new File("../uploads/" + nomLocal);
 

@@ -29,9 +29,10 @@ import org.springframework.web.servlet.LocaleResolver;
 import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
+import fr.triplea.badasscouncil.dto.RoomRecord;
 import fr.triplea.badasscouncil.dto.RoomTransfer;
 import fr.triplea.badasscouncil.model.Room;
-import fr.triplea.badasscouncil.model.RoomPurgeMethod;
+import fr.triplea.badasscouncil.model.RoomPurgeType;
 import fr.triplea.badasscouncil.model.RoomState;
 import fr.triplea.badasscouncil.model.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,10 +63,11 @@ public class RoomController
   @Autowired
   private PasswordEncoder passwordEncoder;
 
+
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
-  public List<RoomTransfer> getList(final Authentication authentication) 
+  public List<RoomRecord> getList(final Authentication authentication) 
   { 
     if (authentication != null)
     {
@@ -73,11 +75,11 @@ public class RoomController
 
       if (found != null)
       {
-        return roomRepository.list(); 
+        return roomRepository.listRooms(); 
       }
     }
     
-    return new ArrayList<RoomTransfer>();
+    return new ArrayList<RoomRecord>();
   }
 
   private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"); 
@@ -96,20 +98,20 @@ public class RoomController
     {
       if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
       {
-        RoomTransfer r = new RoomTransfer(
-            found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "",
-            found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "",
-            found.getRoomId().intValue(),   
-            found.getName(),
-            found.getState().getState(),
-            found.getUser().getUserId().intValue(),
-            "",
-            found.getTopic(),
-            found.getNotes(),
-            found.getPurgeMethod().getPurgeMethod(),
-            found.getMessagesLimit().intValue(),
-            found.getTimeDuration().intValue()
-            );
+        RoomTransfer r = new RoomTransfer();
+        
+        r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
+        r.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "");
+        r.setRoomId(found.getRoomId().intValue());   
+        r.setName(found.getName());
+        r.setState(found.getState().getState());
+        r.setOwnerId(found.getUser().getUserId().intValue());
+        r.setPassword("");
+        r.setTopic(found.getTopic());
+        r.setNotes(found.getNotes());
+        r.setPurgeType(found.getPurgeType().getPurgeType());
+        r.setMessagesLimit(found.getMessagesLimit().intValue());
+        r.setTimeDuration(found.getTimeDuration().intValue());    
         
         return ResponseEntity.ok(r);
       }
@@ -138,15 +140,14 @@ public class RoomController
       
       found.setUser(user);
       
-      if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } else { found.setPasswordHash(""); }
+      if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } else { found.setPasswordHash(""); } 
       
       found.setTopic(room.getTopic());
       found.setNotes(room.getNotes());
 
-      if (room.getPurgeMethod().equals("MESSAGES_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.MESSAGES_LIMITED); }
-      else if (room.getPurgeMethod().equals("TIME_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.TIME_LIMITED); }
-      else if (room.getPurgeMethod().equals("WHEN_DEPOPULATED")) { found.setPurgeMethod(RoomPurgeMethod.WHEN_DEPOPULATED); }
-      else { found.setPurgeMethod(RoomPurgeMethod.NEVER); }
+      if (room.getPurgeType().equals("MESSAGES_LIMITED")) { found.setPurgeType(RoomPurgeType.MESSAGES_LIMITED); }
+      else if (room.getPurgeType().equals("TIME_LIMITED")) { found.setPurgeType(RoomPurgeType.TIME_LIMITED); }
+      else { found.setPurgeType(RoomPurgeType.NEVER); }
       
       found.setMessagesLimit(room.getMessagesLimit());
       found.setTimeDuration(room.getTimeDuration());
@@ -186,21 +187,18 @@ public class RoomController
         else if (room.getState().equals("TRASHED")) { found.setState(RoomState.TRASHED); }
         else { found.setState(RoomState.ACTIVE); }
 
-        if (room.hasPassword()) 
+        if (room.hasPassword())
         { 
           if (room.getPassword().equals("BLANK")) { found.setPasswordHash(""); }
           else { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim()));  }
         } 
         
-        found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); 
-
         found.setTopic(room.getTopic());
         found.setNotes(room.getNotes());
 
-        if (room.getPurgeMethod().equals("MESSAGES_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.MESSAGES_LIMITED); }
-        else if (room.getPurgeMethod().equals("TIME_LIMITED")) { found.setPurgeMethod(RoomPurgeMethod.TIME_LIMITED); }
-        else if (room.getPurgeMethod().equals("WHEN_DEPOPULATED")) { found.setPurgeMethod(RoomPurgeMethod.WHEN_DEPOPULATED); }
-        else { found.setPurgeMethod(RoomPurgeMethod.NEVER); }
+        if (room.getPurgeType().equals("MESSAGES_LIMITED")) { found.setPurgeType(RoomPurgeType.MESSAGES_LIMITED); }
+        else if (room.getPurgeType().equals("TIME_LIMITED")) { found.setPurgeType(RoomPurgeType.TIME_LIMITED); }
+        else { found.setPurgeType(RoomPurgeType.NEVER); }
         
         found.setMessagesLimit(room.getMessagesLimit());
         found.setTimeDuration(room.getTimeDuration());
@@ -236,6 +234,7 @@ public class RoomController
       if (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN"))
       {
         found.setEnabled(false); 
+        found.setState(RoomState.TRASHED);
         
         roomRepository.saveAndFlush(found);
 

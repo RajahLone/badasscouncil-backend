@@ -29,4 +29,20 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
              + "ORDER BY m.message_id ASC ")
   List<MessageShort> findNew(@Param("room") int room, @Param("user") int user, @Param("last") int last);
 
+  
+  @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room ")
+  void deleteAllByRoom(@Param("room") int room);
+  
+  @NativeQuery("SELECT DISTINCT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.room_id = :room AND m.message_id NOT IN (SELECT n.message_id FROM badasscouncil.messages AS n ORDER BY n.message_id DESC LIMIT :limit) ")
+  long countMessagesLimited(@Param("room") int room, @Param("limit") int limit);
+  
+  @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room AND m.message_id NOT IN (SELECT n.message_id FROM badasscouncil.messages AS n ORDER BY n.message_id DESC LIMIT :limit) ")
+  void deleteMesagesLimited(@Param("room") int room, @Param("limit") int limit);
+  
+  @NativeQuery("SELECT DISTINCT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.room_id = :room AND :lifespan > 0 AND (m.created_on::timestamp + CONCAT('', :lifespan, ' minutes')::interval) < NOW() ")
+  long countLifeLimited(@Param("room") int room, @Param("lifespan") int lifespan);
+  
+  @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room AND :lifespan > 0 AND (m.created_on::timestamp + CONCAT('', :lifespan, ' minutes')::interval) < NOW() ")
+  void deleteLifeLimited(@Param("room") int room, @Param("lifespan") int lifespan);
+
 }

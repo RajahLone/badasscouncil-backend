@@ -27,7 +27,7 @@ public class CaptchaTransfer
       response = "";
     }
     
-    response = "You wouldn't cheat on a sphinge, believe me."; // don't send an
+    response = "You wouldn't cheat on a sphinge, believe me."; // don't send the response
   }
   
 }

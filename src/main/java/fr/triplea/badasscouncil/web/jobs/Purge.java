@@ -11,7 +11,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
+import fr.triplea.badasscouncil.dao.MessageRepository;
+import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.model.Attachment;
+import fr.triplea.badasscouncil.model.Room;
 
 @Component
 public class Purge 
@@ -24,6 +27,12 @@ public class Purge
   
   @Autowired
   private AttachmentRepository attachmentRepository;
+
+  @Autowired
+  private RoomRepository roomRepository;
+
+  @Autowired
+  private MessageRepository messageRepository;
 
   
   @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS) // every minutes
@@ -89,4 +98,99 @@ public class Purge
     catch (Exception e) { LOG.error(e.toString()); }
   }
   
+  
+  @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS) // every minutes
+  public void deleteOldMessages() 
+  {
+    
+    // in trashed rooms
+    //
+    try 
+    {
+      Room r = null;
+      
+      List<Integer> ids = roomRepository.findTrashedState();
+      
+      if (ids != null)
+      {
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            r = roomRepository.findById(ids.get(i).intValue());
+            
+            if (r != null)
+            {
+              messageRepository.deleteAllByRoom(r.getRoomId());
+              
+              roomRepository.delete(r);
+            }
+          }
+        }
+      }
+    }
+    catch (Exception e) { LOG.error(e.toString()); }
+
+    // in messages limited rooms
+    //
+    try 
+    {
+      Room r = null;
+
+      List<Integer> ids = roomRepository.findLimitedMessages();
+      
+      if (ids != null)
+      {
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            r = roomRepository.findById(ids.get(i).intValue());
+            
+            if (r != null)
+            {
+              long n = messageRepository.countMessagesLimited(r.getRoomId().intValue(), r.getMessagesLimit().intValue());
+              
+              if (n > 0) { messageRepository.deleteMesagesLimited(r.getRoomId().intValue(), r.getMessagesLimit().intValue()); }
+            }
+          }
+        }
+      }
+    }
+    catch (Exception e) { LOG.error(e.toString()); }
+  
+
+    // in life limited rooms
+    //
+    try 
+    {
+      Room r = null;
+
+      List<Integer> ids = roomRepository.findLimitedLife();
+      
+      if (ids != null)
+      {
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            r = roomRepository.findById(ids.get(i).intValue());
+            
+            if (r != null)
+            {
+              if (r.getTimeDuration() > 0)
+              {
+                long n = messageRepository.countLifeLimited(r.getRoomId().intValue(), r.getTimeDuration().intValue());;
+                
+                if (n > 0) { messageRepository.deleteLifeLimited(r.getRoomId().intValue(), r.getTimeDuration().intValue()); }
+              }
+            }
+          }
+        }
+      }
+    }
+    catch (Exception e) { LOG.error(e.toString()); }
+
+  }
+
 }

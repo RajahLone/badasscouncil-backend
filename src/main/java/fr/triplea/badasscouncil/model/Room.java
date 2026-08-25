@@ -70,7 +70,7 @@ public class Room
 
 
   @Enumerated(EnumType.STRING) 
-  private RoomPurgeMethod purgeMethod;
+  private RoomPurgeType purgeType;
 
   private Integer messagesLimit = 1000;
 
@@ -127,8 +127,8 @@ public class Room
   public String getNotes() { return this.notes; }
   
 
-  public void setPurgeMethod(RoomPurgeMethod enu) { this.purgeMethod = enu; }
-  public RoomPurgeMethod getPurgeMethod() { return this.purgeMethod; }
+  public void setPurgeType(RoomPurgeType enu) { this.purgeType = enu; }
+  public RoomPurgeType getPurgeType() { return this.purgeType; }
 
   public void setMessagesLimit(int max) { this.messagesLimit = Integer.valueOf(max); }
   public Integer getMessagesLimit() { return this.messagesLimit; }
