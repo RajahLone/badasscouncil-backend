@@ -35,6 +35,7 @@ import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.RoomPurgeType;
 import fr.triplea.badasscouncil.model.RoomState;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -47,6 +48,9 @@ public class RoomController
 
   @Autowired
   private RoomRepository roomRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private UserRepository userRepository;
@@ -98,6 +102,8 @@ public class RoomController
     {
       if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
       {
+        userService.setLastActivityOn(authentication);
+
         RoomTransfer r = new RoomTransfer();
         
         r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
@@ -132,6 +138,8 @@ public class RoomController
     
     if (!(room.getName().isBlank()) && (user != null))
     {
+      userService.setLastActivityOn(authentication);
+
       Room found = new Room();
       
       found.setName(room.getName());
@@ -181,6 +189,8 @@ public class RoomController
     {
       if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
       {
+        userService.setLastActivityOn(authentication);
+
         found.setName(room.getName());
 
         if (room.getState().equals("LOCKED")) { found.setState(RoomState.LOCKED); }
@@ -233,6 +243,8 @@ public class RoomController
     {
       if (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN"))
       {
+        userService.setLastActivityOn(authentication);
+
         found.setEnabled(false); 
         found.setState(RoomState.TRASHED);
         

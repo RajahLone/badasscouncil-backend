@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -45,7 +44,6 @@ public class User
   private LocalDateTime createdOn;
   
   @Temporal(TemporalType.TIMESTAMP)
-  @UpdateTimestamp
   @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime updatedOn;
 
@@ -78,6 +76,7 @@ public class User
   private LocalDateTime expiredOn;
   
   @Temporal(TemporalType.TIMESTAMP)
+  @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="MM-dd-yyyy HH:mm:ss", timezone="Europe/Paris")
   private LocalDateTime lastActivityOn;
   
   private Integer sessionTimeout = 15;
@@ -148,13 +147,11 @@ public class User
   DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
-  public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getCreatedOn() { return this.createdOn; }
   @Transient
   public boolean hasCreatedOn() { return (this.createdOn != null); }
   
   public void setUpdatedOn(LocalDateTime d) { this.updatedOn = d; }
-  public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   @Transient
   public boolean hasUpdatedOn() { return (this.updatedOn != null); }

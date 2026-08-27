@@ -1,6 +1,7 @@
 package fr.triplea.badasscouncil.web.service;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.model.Attachment;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.model.UserStatus;
 
 @Service
 public class UserService 
@@ -27,7 +29,7 @@ public class UserService
   @Autowired
   private AttachmentRepository attachmentRepository;
 
-  
+  /** if user can upload attachment or not */
   public final synchronized boolean canUpload(final Authentication authentication)
   {
     boolean ret = false;
@@ -100,5 +102,25 @@ public class UserService
     return userId;
   }
 
+  /** set user's last activity timestamp and change SLEEPING status to ACTIVE */
+  public final synchronized void setLastActivityOn(final Authentication authentication)
+  {
+    if (authentication == null) { return; }
+    
+    User u = userRepository.findByLoginName(authentication.getName());
+    
+    if (u != null)
+    {
+      u.setLastActivityOn(LocalDateTime.now());
+      
+      if (u.getStatus().equals(UserStatus.SLEEPING)) 
+      { 
+        u.setUpdatedOn(LocalDateTime.now());
+        u.setStatus(UserStatus.ACTIVE); 
+      }
+      
+      userRepository.saveAndFlush(u);
+    }
+  }
   
 }

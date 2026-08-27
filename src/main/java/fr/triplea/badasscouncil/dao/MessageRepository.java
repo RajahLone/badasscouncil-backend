@@ -45,4 +45,7 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
   @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room AND :lifespan > 0 AND (m.created_on::timestamp + CONCAT('', :lifespan, ' minutes')::interval) < NOW() ")
   void deleteLifeLimited(@Param("room") int room, @Param("lifespan") int lifespan);
 
+  @NativeQuery("SELECT DISTINCT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.user_id = :owner ")
+  long countOwnedMessages(@Param("owner") int owner);
+
 }

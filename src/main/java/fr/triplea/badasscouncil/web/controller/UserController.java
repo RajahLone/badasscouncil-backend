@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.UserStatus;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
+import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.web.service.VariableService;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.model.Role;
@@ -57,6 +59,9 @@ public class UserController
 
   @Autowired
   private RoleRepository roleRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private UserRepository userRepository;
@@ -95,7 +100,9 @@ public class UserController
       ) 
   { 
     if (authentication == null) { return new ArrayList<UserList>(); }
-        
+
+    userService.setLastActivityOn(authentication);
+
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
     
@@ -199,6 +206,8 @@ public class UserController
     
     if (found != null)
     {
+      userService.setLastActivityOn(authentication);
+
       Role adminRole = roleRepository.findByLabel("ROLE_ADMIN"); 
       Role regulRole = roleRepository.findByLabel("ROLE_REGUL"); 
       Role userRole = roleRepository.findByLabel("ROLE_USER");
@@ -215,14 +224,15 @@ public class UserController
       
       if (u.getUpdatedOn().equals(u.getCreatedOn())) { u.setUpdatedOn(""); }
       
-      u.setLastActivityOn("");
-      u.setPassword("");
+      u.setLastActivityOn(found.hasLastActivityOn() ? dtf.format(found.getLastActivityOn()) : "");
  
       if (found.getStatus().equals(UserStatus.PENDING)) { u.setStatus("PENDING"); }
       else if (found.getStatus().equals(UserStatus.LOCKED)) { u.setStatus("LOCKED"); }
       else if (found.getStatus().equals(UserStatus.BANNED)) { u.setStatus("BANNED"); }
       else if (found.getStatus().equals(UserStatus.SLEEPING)) { u.setStatus("SLEEPING"); }
       else { u.setStatus("ACTIVE"); }
+
+      u.setPassword("");
 
       u.setNickName(found.getNickName());
       u.setGroupName(found.getGroupName()); 
@@ -325,6 +335,8 @@ public class UserController
       {
         if (!(user.getNickName().isBlank()))
         {
+          userService.setLastActivityOn(authentication);
+
           found = new User();
           
           found.setRoles(found.getRoles());
@@ -412,7 +424,11 @@ public class UserController
     
     if (found != null)
     {
+      userService.setLastActivityOn(authentication);
+
       found.setRoles(found.getRoles());
+
+      found.setUpdatedOn(LocalDateTime.now());
       found.setEnabled(true);
       
       if (user.getStatus().equals("PENDING")) { found.setStatus(UserStatus.PENDING); }
@@ -494,9 +510,13 @@ public class UserController
     
     if (found != null)
     {
+      userService.setLastActivityOn(authentication);
+
       refreshTokenRepository.deleteByUserId(found.getUserId());
       
+      found.setUpdatedOn(LocalDateTime.now());
       found.setEnabled(false); 
+
       found.setLoginName(found.getLoginName() + "_" + UUID.randomUUID().toString());
       found.setNickName(found.getNickName() + "_" + UUID.randomUUID().toString());
  
@@ -537,6 +557,8 @@ public class UserController
     {
       if (usersIds.size() > 0)
       {
+        userService.setLastActivityOn(authentication);
+
         userRepository.activate(usersIds);
         userRepository.flush();
         

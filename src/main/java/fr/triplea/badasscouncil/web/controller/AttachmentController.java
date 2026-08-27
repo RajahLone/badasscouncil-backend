@@ -95,6 +95,8 @@ public class AttachmentController
       ) 
   { 
     if (authentication == null) { return new ArrayList<Attachment>(); }
+    
+    userService.setLastActivityOn(authentication);
 
     if (nameFilter != null) { if (nameFilter.isBlank()) { nameFilter = null; } else { nameFilter = nameFilter.trim().toUpperCase(); } }
     if (statusFilter != null) { if (statusFilter.isBlank()) { statusFilter = null; } else { statusFilter = statusFilter.trim().toUpperCase(); } }
@@ -189,6 +191,8 @@ public class AttachmentController
             
       if ((userId == 0) || (p.getOwnerId() == userId) || p.isShared())
       {
+        userService.setLastActivityOn(authentication);
+
         byte[] data = null;
         
         File f = new File("../uploads", p.getLocalName());
@@ -231,6 +235,8 @@ public class AttachmentController
 
       if ((userId == 0) || (p.ownerId() == userId))
       {
+        userService.setLastActivityOn(authentication);
+
         return ResponseEntity.ok(p.toAttachment(true)); 
       }
     }
@@ -250,6 +256,8 @@ public class AttachmentController
 
       if ((userId == 0) || (p.ownerId() == userId))
       {
+        userService.setLastActivityOn(authentication);
+
         return ResponseEntity.ok(p); 
       }
     }
@@ -271,6 +279,8 @@ public class AttachmentController
     
     if (user != null) 
     {
+      userService.setLastActivityOn(authentication);
+
       Attachment fresh = new Attachment();
             
       fresh.setFileId(null);
@@ -309,6 +319,8 @@ public class AttachmentController
 
       if ((userId == 0) || ((file.ownerId() == userId) && found.getUser().getUserId() == userId))
       {
+        userService.setLastActivityOn(authentication);
+
         User user = userRepository.findById(file.ownerId());
         User dest = userRepository.findById(file.destId());
         
@@ -354,6 +366,8 @@ public class AttachmentController
 
       if (found.getRecipient().getUserId() == userId)
       {
+        userService.setLastActivityOn(authentication);
+
         found.setEnabled(true);
         
         found.setUser(found.getRecipient());
@@ -387,6 +401,8 @@ public class AttachmentController
 
       if (found.getRecipient().getUserId() == userId)
       {
+        userService.setLastActivityOn(authentication);
+
         found.setEnabled(true); 
         
         found.setRecipient(null);
@@ -498,6 +514,8 @@ public class AttachmentController
 
       if ((userId == 0) || (found.getOwnerId() == userId))
       {
+        userService.setLastActivityOn(authentication);
+
         HomeInformationTransfer mt = new HomeInformationTransfer();
 
         File dir = new File("../uploads-temp/" + fileId + "-" + name);
@@ -625,6 +643,8 @@ public class AttachmentController
 
       if ((userId == 0) || (found.getUser().getUserId() == userId))
       {
+        userService.setLastActivityOn(authentication);
+
         found.setEnabled(false); 
         
         attachmentRepository.saveAndFlush(found);

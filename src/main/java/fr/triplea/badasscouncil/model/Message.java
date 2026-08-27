@@ -1,8 +1,6 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.util.StringUtils;
@@ -20,7 +18,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Transient;
 
 @Entity(name = "badasscouncil.messages")
 @Table(name = "messages")
@@ -56,11 +53,7 @@ public class Message
   public Message() { super(); }
 
   
-  @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
-  
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
-  public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.createdOn; }
   
   public void setRoom(Room r) { this.room = r; }

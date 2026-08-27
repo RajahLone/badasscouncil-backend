@@ -1,8 +1,6 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,14 +24,6 @@ import jakarta.persistence.Transient;
 @Table(name = "preferences")
 public class Preference
 {
-/*
-    created_on timestamp without time zone NOT NULL DEFAULT now(),
-    updated_on timestamp without time zone,
-    preference_id integer NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id integer NOT NULL,
-    action_id integer NOT NULL,
-    parameters character varying(4000) COLLATE pg_catalog."default",
-*/  
 
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
@@ -63,15 +53,10 @@ public class Preference
   public Preference() { super(); }
   
   
-  @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
-  
   public void setDateCreation(LocalDateTime d) { this.createdOn = d; }
-  public void setDateCreation(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateCreation() { return this.createdOn; }
   
   public void setDateModification(LocalDateTime d) { this.updatedOn = d; }
-  public void setDateModification(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getDateModification() { return this.updatedOn; }
   
   public void setPreferenceId(Integer id) { this.preferenceId = id; }

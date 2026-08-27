@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
+import fr.triplea.badasscouncil.web.service.UserService;
 
 @RestController
 @RequestMapping("/preference")
@@ -23,6 +24,9 @@ public class PreferenceController
 
   @Autowired
   private PreferenceService preferenceService;
+
+  @Autowired
+  private UserService userService;
 
   
   @GetMapping(value = "/get")
@@ -47,6 +51,8 @@ public class PreferenceController
     
     if (pref != null) 
     { 
+      userService.setLastActivityOn(authentication);
+
       Map<String, Boolean> response = new HashMap<>();
       response.put("set", Boolean.TRUE);
 

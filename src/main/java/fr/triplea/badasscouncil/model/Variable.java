@@ -1,8 +1,6 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Transient;
 
 @Entity(name = "badasscouncil.variables")
 @Table(name = "variables")
@@ -56,15 +53,10 @@ public class Variable
   public Variable() { super(); }
 
   
-  @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
-  
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
-  public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getCreatedOn() { return this.createdOn; }
   
   public void setUpdatedOn(LocalDateTime d) { this.updatedOn = d; }
-  public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   
   public void setVariableId(Integer id) { this.variableId = id; }

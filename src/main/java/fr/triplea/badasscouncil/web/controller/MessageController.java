@@ -23,6 +23,7 @@ import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.UserService;
 
 @RestController
 @RequestMapping("/chat")
@@ -34,6 +35,9 @@ public class MessageController
 
   @Autowired
   private MessageRepository messageRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private UserRepository userRepository;
@@ -48,6 +52,8 @@ public class MessageController
   { 
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
 
       if (found != null)
@@ -69,6 +75,8 @@ public class MessageController
 
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
       
       if ((found != null) && (l >= 0)) 
@@ -93,6 +101,8 @@ public class MessageController
 
     if ((authentication != null) && (message != null))
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
       
       Room room = roomRepository.findById(r);

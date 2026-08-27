@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +26,7 @@ import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.PasswordTransfer;
 import fr.triplea.badasscouncil.dto.UserTransfer;
 import fr.triplea.badasscouncil.model.User;
+import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.model.Role;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -38,6 +40,9 @@ public class AccountController
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private UserService userService;
   
   @Value("${password.salt}")
   private String salt;
@@ -58,6 +63,8 @@ public class AccountController
   {         
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+      
       User found = userRepository.findByLoginName(authentication.getName());
       
       if (found != null) 
@@ -66,12 +73,18 @@ public class AccountController
         
         p.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
         p.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : ""); 
+        
+        if (p.getUpdatedOn().equals(p.getCreatedOn())) { p.setUpdatedOn(""); }
+
+        p.setLastActivityOn(found.hasLastActivityOn() ? dtf.format(found.getLastActivityOn()) : "");
+
         p.setUserId(found.getUserId());
         p.setStatus(found.getStatus().name());
         
         p.setSubscribeMotive(found.getSubscribeMotive());
         
         p.setLoginName(found.getLoginName());
+        p.setPassword("");
         p.setSessionTimeout(15);
         
         p.setNickName(found.getNickName());
@@ -89,9 +102,7 @@ public class AccountController
         p.setEmail(found.getEmail());
         
         p.setStorageLimit(found.getStorageLimit());
-                 
-        p.setLastActivityOn(found.hasLastActivityOn() ? dtf.format(found.getLastActivityOn()) : "");
-       
+                        
         List<Role> roles = found.getRoles();       
         
         if (!(p.hasRole())) { for (Role role : roles) { if (role.isRole("ADMIN")) { p.setRole("ADMIN"); } } }
@@ -112,10 +123,13 @@ public class AccountController
 
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
       
       if (found != null)
       {
+        found.setUpdatedOn(LocalDateTime.now());
         found.setEnabled(true);
 
         found.setSubscribeMotive(user.getSubscribeMotive());
@@ -152,6 +166,8 @@ public class AccountController
 
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
       
       if (found != null)
@@ -174,6 +190,8 @@ public class AccountController
           else
           if (passwordEncoder.matches(salt + mdp_old, found.getPasswordHash()))
           {
+            found.setUpdatedOn(LocalDateTime.now());
+            
             found.setPasswordHash(passwordEncoder.encode(salt + mdp_new.trim()));
             
             userRepository.saveAndFlush(found);

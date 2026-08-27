@@ -35,6 +35,7 @@ import fr.triplea.badasscouncil.security.MyUserDetailsService;
 import fr.triplea.badasscouncil.security.jwt.JwtTokenUtil;
 import fr.triplea.badasscouncil.security.jwt.RefreshTokenException;
 import fr.triplea.badasscouncil.security.jwt.RefreshTokenService;
+import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.web.service.VariableService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -64,6 +65,9 @@ public class AuthController
 
   @Autowired
   private RoleRepository roleRepository;
+
+  @Autowired
+  private UserService userService;
 
   @Autowired
   private UserRepository userRepository;
@@ -207,6 +211,8 @@ public class AuthController
           if (!(uc.hasRole())) { for (Role role : roles) { if (role.isRole("REGUL")) { uc.setRole("REGUL"); } } }
           if (!(uc.hasRole())) { uc.setRole("USER"); }
           
+          userService.setLastActivityOn(authentication);
+
           return ResponseEntity.ok(uc);
         }
       }
@@ -272,6 +278,8 @@ public class AuthController
   {
     if (authentication != null)
     {
+      userService.setLastActivityOn(authentication);
+
       User found = userRepository.findByLoginName(authentication.getName());
       
       if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getUserId()); }

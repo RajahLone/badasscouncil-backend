@@ -13,14 +13,15 @@ import org.springframework.stereotype.Component;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dao.MessageRepository;
 import fr.triplea.badasscouncil.dao.RoomRepository;
+import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.model.Attachment;
 import fr.triplea.badasscouncil.model.Room;
+import fr.triplea.badasscouncil.web.service.VariableService;
+import jakarta.transaction.Transactional;
 
 @Component
 public class Purge 
 {
-  // TODO: purge for users
-  // TODO: purge for messages and rooms
   
   //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(Purge.class);
@@ -34,8 +35,15 @@ public class Purge
   @Autowired
   private MessageRepository messageRepository;
 
+  @Autowired
+  private UserRepository userRepository;
+
+  @Autowired
+  private VariableService variableService;
+
   
   @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS) // every minutes
+  @Transactional
   public void removeDisabledAttachments() 
   {
     try 
@@ -69,6 +77,7 @@ public class Purge
   
 
   @Scheduled(cron = "0 0 0 * * ?") // at midnight
+  @Transactional
   public void disableAttachments() 
   {
     try 
@@ -100,6 +109,7 @@ public class Purge
   
   
   @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS) // every minutes
+  @Transactional
   public void deleteOldMessages() 
   {
     
@@ -190,7 +200,97 @@ public class Purge
       }
     }
     catch (Exception e) { LOG.error(e.toString()); }
+  }
 
+  
+
+  @Scheduled(cron = "0 0 0 * * ?") // at midnight
+  @Transactional
+  public void removeUsers() 
+  {
+    
+    // remove owner's attachments
+    //
+    try 
+    {
+      Attachment a = null;
+
+      List<Integer> as = null;
+      
+      List<Integer> ids = userRepository.findDisabled();
+      
+      if (ids != null)
+      {
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            as = attachmentRepository.findByOwner(ids.get(i).intValue());
+            
+            if (as != null)
+            {
+              if (as.size() > 0)
+              {
+                for (int j = 0; j < ids.size(); j++)
+                {
+                  a = attachmentRepository.findById(as.get(j).intValue());
+                  
+                  if (a != null)
+                  {
+                    a.setEnabled(false);
+
+                    attachmentRepository.saveAndFlush(a);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    catch (Exception e) { LOG.error(e.toString()); }
+    
+    // delete disabled users with no messages
+    //
+    try 
+    {
+      
+      List<Integer> ids = userRepository.findDisabled();
+      
+      if (ids != null)
+      {
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            long n = messageRepository.countOwnedMessages(ids.get(i).intValue());
+            
+            if (n < 1)
+            {
+              userRepository.deleteById(ids.get(i).intValue());
+            }
+          }
+        }
+      }
+    }
+    catch (Exception e) { LOG.error(e.toString()); }
+  }
+  
+  @Scheduled(cron = "0 0 0 * * ?") // at midnight
+  @Transactional
+  public void detectSleepingUsers() 
+  {
+    int months = variableService.getInt("Users", "SLEEPING_STATUS_AFTER", 3);
+
+    if (months > 0)
+    {
+      try 
+      {
+        userRepository.setSleepingStatus(months);
+        userRepository.flush();
+      }
+      catch (Exception e) { LOG.error(e.toString()); }
+    }
   }
 
 }

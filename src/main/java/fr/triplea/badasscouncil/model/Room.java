@@ -1,8 +1,6 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -79,17 +77,12 @@ public class Room
   public Room() { super(); }
 
   
-  @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
-  
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
-  public void setCreatedOn(String s) { this.createdOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getCreatedOn() { return this.createdOn; }
   @Transient
   public boolean hasCreatedOn() { return (this.createdOn != null); }
   
   public void setUpdatedOn(LocalDateTime d) { this.updatedOn = d; }
-  public void setUpdatedOn(String s) { this.updatedOn = LocalDateTime.parse(s, df); }
   public LocalDateTime getUpdatedOn() { return this.updatedOn; }
   @Transient
   public boolean hasUpdatedOn() { return (this.updatedOn != null); }

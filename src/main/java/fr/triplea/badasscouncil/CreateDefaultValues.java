@@ -65,6 +65,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addVariableIfMissing("Quota", "FILE_SIZE", "1000", "Maximum file size (in MB).");
     addVariableIfMissing("Quota", "STORAGE_DEFAULT", "0", "-1 : not yet allowed to upload, 0 : follows FILES_PER_MEMBER * FILE_SIZE limit, > 0 : limit in GB ");
 
+    addVariableIfMissing("Users", "SLEEPING_STATUS_AFTER", "3", "set SLEEPING status after N months of inactivity, 0 to avoid status change ");
     
     addQuote(1, "What happens in your Bad Ass instance... will eventually be purged.");
     addQuote(2, "Where you can count very few people and, at least, a terrifyingly good person.");

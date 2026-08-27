@@ -111,9 +111,6 @@ public interface UserRepository extends JpaRepository<User, Integer>
   
   @NativeQuery("SELECT DISTINCT u.* FROM badasscouncil.users AS u WHERE u.status = :status AND u.enabled IS TRUE ORDER BY u.nick_name ASC, u.group_name ASC, u.first_name ASC, u.last_name ASC ")
   List<User> findByStatus(@Param("status") String status);
- 
-  @Override
-  void delete(User participant);
 
   @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name, u.first_name, u.last_name FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nick_name ASC, u.group_name ASC ")
   List<UserOptionList> getUserOptionList();
@@ -123,8 +120,22 @@ public interface UserRepository extends JpaRepository<User, Integer>
 
 
   @Modifying
-  @NativeQuery("UPDATE badasscouncil.users SET status = 'ACTIVE'::badasscouncil.user_status WHERE user_id IN :ids ")
+  @NativeQuery("UPDATE badasscouncil.users SET updated_on = NOW(), status = 'ACTIVE'::badasscouncil.user_status WHERE user_id IN :ids ")
   void activate(@Param("ids") List<Integer> usersIds);
 
+  
+  @Modifying
+  @NativeQuery("UPDATE badasscouncil.users SET updated_on = NOW(), status = 'SLEEPING'::badasscouncil.user_status WHERE user_id IN (SELECT DISTINCT u.user_id FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND (u.last_activity_on::timestamp + CONCAT('', :months, ' months')::interval) < NOW()) ")
+  void setSleepingStatus(@Param("months") int months);
+
+  
+  @Override
+  void delete(User participant);
+  
+  @NativeQuery("SELECT DISTINCT u.user_id FROM badasscouncil.users AS u WHERE u.enabled IS FALSE ")
+  List<Integer> findDisabled();
+  
+  @NativeQuery("DELETE FROM badasscouncil.users AS u WHERE u.user_id = :id AND u.enabled IS FALSE ")
+  void deleteById(@Param("id") int id);
 
 }
