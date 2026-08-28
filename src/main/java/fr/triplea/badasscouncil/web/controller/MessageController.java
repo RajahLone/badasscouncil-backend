@@ -6,8 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,7 @@ import fr.triplea.badasscouncil.dao.MessageRepository;
 import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dto.MessageShort;
+import fr.triplea.badasscouncil.dto.MessageShortPass;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Room;
@@ -32,7 +35,13 @@ public class MessageController
   
   @SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
+  
+  @Value("${password.salt}")
+  private String salt;
 
+  @Autowired
+  public PasswordEncoder passwordEncoder;
+ 
   @Autowired
   private MessageRepository messageRepository;
 
@@ -65,23 +74,35 @@ public class MessageController
     return new ArrayList<NickNameOptionList>();
   }
 
-  @GetMapping(value = "/new/{room}/{last}")
+  @PostMapping(value = "/new/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getNew(@PathVariable(name="room") int r, @PathVariable(name="last") int l, final Authentication authentication)
+  public List<MessageShort> getNew(@PathVariable(name="room") int r, @PathVariable(name="last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
-    // TODO: restricted by password
-    
     List<MessageShort> mlist = null;
 
-    if (authentication != null)
-    {
-      userService.setLastActivityOn(authentication);
+    Room room = roomRepository.findById(r);
 
-      User found = userRepository.findByLoginName(authentication.getName());
+    if (room != null) 
+    { 
+      boolean granted = true;
       
-      if ((found != null) && (l >= 0)) 
-      {         
-        mlist = messageRepository.findNew(r, found.getUserId(), l);
+      if (room.hasPassword())
+      {
+        granted = false;
+        
+        if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+      }
+      
+      if ((authentication != null) && granted)
+      {
+        userService.setLastActivityOn(authentication);
+
+        User found = userRepository.findByLoginName(authentication.getName());
+        
+        if ((found != null) && (l >= 0)) 
+        {         
+          mlist = messageRepository.findNew(r, found.getUserId(), l);
+        }
       }
     }
 
@@ -92,46 +113,57 @@ public class MessageController
 
   @PostMapping(value = "/add/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addMessage(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShort message, final Authentication authentication)
+  public List<MessageShort> addMessage(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
-    // TODO: restricted by password
     // TODO: pagination (500 per 500, backlogging)
     
     List<MessageShort> mlist = null;
 
-    if ((authentication != null) && (message != null))
-    {
-      userService.setLastActivityOn(authentication);
+    Room room = roomRepository.findById(r);
 
-      User found = userRepository.findByLoginName(authentication.getName());
+    if (room != null) 
+    { 
+      boolean granted = true;
       
-      Room room = roomRepository.findById(r);
+      if (room.hasPassword())
+      {
+        granted = false;
+        
+        if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+      }
       
-      if ((room != null) && (found != null) && (l >= 0)) 
-      { 
-        if (found.getNickName().equals(message.nickName()))
-        {
-          String ligne = message.content();
-          
-          if (ligne == null) { ligne = ""; }
-          
-          if (!ligne.isBlank())
+      if ((authentication != null) && (message != null) && granted)
+      {
+        userService.setLastActivityOn(authentication);
+
+        User found = userRepository.findByLoginName(authentication.getName());
+                
+        if ((found != null) && (l >= 0)) 
+        { 
+          if (found.getNickName().equals(message.getNickName()))
           {
-            Message m = new Message();
+            String ligne = message.getContent();
             
-            m.setMessageId(null);
-            m.setRoom(room);
-            m.setUser(found);
-            m.setContent(ligne);
+            if (ligne == null) { ligne = ""; }
             
-            User dest = userRepository.findById(message.destId());
+            if (!ligne.isBlank())
+            {
+              Message m = new Message();
+              
+              m.setMessageId(null);
+              m.setRoom(room);
+              m.setUser(found);
+              m.setContent(ligne);
+              
+              User dest = userRepository.findById(message.getDestId());
+              
+              if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
+              
+              messageRepository.saveAndFlush(m);
+            }
             
-            if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
-            
-            messageRepository.saveAndFlush(m);
+            mlist = messageRepository.findNew(r, found.getUserId(), l);
           }
-          
-          mlist = messageRepository.findNew(r, found.getUserId(), l);
         }
       }
     }

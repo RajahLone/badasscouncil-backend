@@ -22,7 +22,7 @@ public interface RoomRepository extends JpaRepository<Room, Integer>
       + "  r.name, "
       + "  r.state, "
       + "  r.user_id AS owner_id, "
-      + "  '' AS password, "
+      + "  CASE WHEN LENGTH(r.password_hash) > 0 THEN 'needed' ELSE '' END AS password, "
       + "  r.topic, "
       + "  r.notes, "
       + "  r.purge_type, "
