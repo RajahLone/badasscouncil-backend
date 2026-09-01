@@ -25,6 +25,7 @@ import fr.triplea.badasscouncil.dto.MessageShortPass;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Room;
+import fr.triplea.badasscouncil.model.RoomState;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.web.service.UserService;
 
@@ -93,6 +94,13 @@ public class MessageController
         if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
       }
       
+      if (room.getState().equals(RoomState.LOCKED))
+      {
+        granted = false;
+        
+        if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
+      }
+      
       if ((authentication != null) && granted)
       {
         userService.setLastActivityOn(authentication);
@@ -130,6 +138,13 @@ public class MessageController
         granted = false;
         
         if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+      }
+      
+      if (room.getState().equals(RoomState.LOCKED))
+      {
+        granted = false;
+        
+        if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
       }
       
       if ((authentication != null) && (message != null) && granted)

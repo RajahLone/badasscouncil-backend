@@ -102,6 +102,39 @@ public class UserService
     return userId;
   }
 
+  /**  */
+  public final synchronized boolean hasSameId(final Authentication authentication, final Integer id)
+  {
+    if (authentication != null)
+    {
+      User found = userRepository.findByLoginName(authentication.getName());
+      
+      if (found != null) { return found.getUserId().equals(id); }
+    }
+    
+    return false;
+  }
+
+  /** returns true if user has ADMIN or REGUL role */
+  public final synchronized boolean canRegulate(final Authentication authentication)
+  {
+    if (authentication != null)
+    {
+      User found = userRepository.findByLoginName(authentication.getName());
+      
+      if (found != null)
+      {
+        List<String> roles = authentication.getAuthorities().stream().map(r -> r.getAuthority()).collect(Collectors.toList());
+
+        if (roles.contains("ROLE_ADMIN")) { return true; }
+        if (roles.contains("ROLE_REGUL")) { return true; }
+      }
+    }
+    
+    return false;
+  }
+
+  
   /** set user's last activity timestamp and change SLEEPING status to ACTIVE */
   public final synchronized void setLastActivityOn(final Authentication authentication)
   {
