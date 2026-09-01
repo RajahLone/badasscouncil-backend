@@ -133,6 +133,10 @@ public class Purge
             {
               messageRepository.deleteAllByRoom(r.getRoomId());
               
+              if (roomRepository.countAllowedUsers(r.getRoomId()) > 0) { roomRepository.deleteAllowedUsers(r.getRoomId()); }
+              
+              if (roomRepository.countDisallowedUsers(r.getRoomId()) > 0) { roomRepository.deleteDisallowedUsers(r.getRoomId()); }
+
               roomRepository.delete(r);
             }
           }
@@ -267,6 +271,10 @@ public class Purge
             
             if (n < 1)
             {
+              if (userRepository.countRoomsAllowed(ids.get(i).intValue()) > 0) { userRepository.deleteRoomsAllowed(ids.get(i).intValue()); }
+
+              if (userRepository.countRoomsDisallowed(ids.get(i).intValue()) > 0) { userRepository.deleteRoomsDisallowed(ids.get(i).intValue()); }
+
               userRepository.deleteById(ids.get(i).intValue());
             }
           }

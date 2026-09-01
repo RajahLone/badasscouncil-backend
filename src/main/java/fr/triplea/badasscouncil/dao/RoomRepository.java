@@ -3,6 +3,7 @@ package fr.triplea.badasscouncil.dao;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
@@ -27,7 +28,8 @@ public interface RoomRepository extends JpaRepository<Room, Integer>
       + "  r.notes, "
       + "  r.purge_type, "
       + "  r.messages_limit, "
-      + "  r.time_duration "
+      + "  r.time_duration, "
+      + "  r.listed_users_type "
       + "FROM badasscouncil.rooms AS r "
       + "WHERE r.enabled IS TRUE AND r.state <> 'TRASHED'::badasscouncil.room_state "
       + "ORDER BY r.name ")
@@ -42,6 +44,19 @@ public interface RoomRepository extends JpaRepository<Room, Integer>
   @NativeQuery("SELECT DISTINCT r.room_id FROM badasscouncil.rooms AS r WHERE r.purge_type = 'TIME_LIMITED'::badasscouncil.room_purge_type ")
   List<Integer> findLimitedLife();
   
+  @NativeQuery("SELECT COUNT(rau.*) FROM badasscouncil.rooms_allowed_users AS rau WHERE rau.room_id = :room ")
+  long countAllowedUsers(@Param("room") int room);
+
+  @Modifying(clearAutomatically = true)
+  @NativeQuery("DELETE FROM badasscouncil.rooms_allowed_users AS rau WHERE rau.room_id = :room ")
+  void deleteAllowedUsers(@Param("room") int room);
+  
+  @NativeQuery("SELECT COUNT(rdu.*) FROM badasscouncil.rooms_disallowed_users AS rdu WHERE rdu.room_id = :room ")
+  long countDisallowedUsers(@Param("room") int room);
+
+  @Modifying(clearAutomatically = true)
+  @NativeQuery("DELETE FROM badasscouncil.rooms_disallowed_users AS rdu WHERE rdu.room_id = :room ")
+  void deleteDisallowedUsers(@Param("room") int room);
   
   @Override
   void delete(Room r);

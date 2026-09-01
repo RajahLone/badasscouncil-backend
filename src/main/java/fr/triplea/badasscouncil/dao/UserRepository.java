@@ -115,10 +115,21 @@ public interface UserRepository extends JpaRepository<User, Integer>
   @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name, u.first_name, u.last_name FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nick_name ASC, u.group_name ASC ")
   List<UserOptionList> getUserOptionList();
 
-  @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE (u.enabled IS TRUE) AND (u.user_id <> :id) AND (LENGTH(u.nick_name) > 0) ORDER BY u.nick_name ASC ")
+  @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE (u.enabled IS TRUE) AND (u.user_id <> :id) AND (LENGTH(u.nick_name) > 0) ORDER BY u.nick_name, u.group_name ASC ")
   List<NickNameOptionList> getNickNameOptionList(@Param("id") int id);
 
 
+
+  @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE u.enabled IS TRUE ORDER BY u.nick_name, u.group_name ASC ")
+  List<NickNameOptionList> getAll();
+
+  @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND u.user_id IN (SELECT rau.user_id FROM badasscouncil.rooms_allowed_users AS rau WHERE rau.room_id = :room) ORDER BY u.nick_name, u.group_name ASC ")
+  List<NickNameOptionList> getAllowedList(@Param("room") int room);
+
+  @NativeQuery("SELECT DISTINCT u.user_id, u.nick_name, u.group_name FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND u.user_id IN (SELECT rdu.user_id FROM badasscouncil.rooms_disallowed_users AS rdu WHERE rdu.room_id = :room) ORDER BY u.nick_name, u.group_name ASC ")
+  List<NickNameOptionList> getDisallowedList(@Param("room") int room);
+
+  
   @Modifying
   @NativeQuery("UPDATE badasscouncil.users SET updated_on = NOW(), status = 'ACTIVE'::badasscouncil.user_status WHERE user_id IN :ids ")
   void activate(@Param("ids") List<Integer> usersIds);
@@ -129,12 +140,29 @@ public interface UserRepository extends JpaRepository<User, Integer>
   void setSleepingStatus(@Param("months") int months);
 
   
+  
+  @NativeQuery("SELECT COUNT(rau.*) FROM badasscouncil.rooms_allowed_users AS rau WHERE rau.user_id = :user ")
+  long countRoomsAllowed(@Param("user") int user);
+
+  @Modifying(clearAutomatically = true)
+  @NativeQuery("DELETE FROM badasscouncil.rooms_allowed_users AS rau WHERE rau.user_id = :user ")
+  void deleteRoomsAllowed(@Param("user") int user);
+  
+  @NativeQuery("SELECT COUNT(rdu.*) FROM badasscouncil.rooms_disallowed_users AS rdu WHERE rdu.user_id = :user ")
+  long countRoomsDisallowed(@Param("user") int user);
+
+  @Modifying(clearAutomatically = true)
+  @NativeQuery("DELETE FROM badasscouncil.rooms_disallowed_users AS rdu WHERE rdu.user_id = :user ")
+  void deleteRoomsDisallowed(@Param("user") int user);
+
+  
   @Override
   void delete(User participant);
   
   @NativeQuery("SELECT DISTINCT u.user_id FROM badasscouncil.users AS u WHERE u.enabled IS FALSE ")
   List<Integer> findDisabled();
   
+  @Modifying(clearAutomatically = true)
   @NativeQuery("DELETE FROM badasscouncil.users AS u WHERE u.user_id = :id AND u.enabled IS FALSE ")
   void deleteById(@Param("id") int id);
 

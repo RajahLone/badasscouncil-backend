@@ -1,6 +1,7 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,6 +18,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -74,6 +77,23 @@ public class Room
 
   private Integer timeDuration = 4321;
   
+  
+  private Integer listedUsersType = 0;
+
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "rooms_allowed_users", 
+             joinColumns = @JoinColumn(name = "room_id", referencedColumnName = "room_id"), 
+             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"))
+  private List<User> usersAllowed;
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "rooms_disallowed_users", 
+             joinColumns = @JoinColumn(name = "room_id", referencedColumnName = "room_id"), 
+             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"))
+  private List<User> usersDisallowed;
+
+  
   public Room() { super(); }
 
   
@@ -129,6 +149,8 @@ public class Room
   public void setTimeDuration(int max) { this.timeDuration = Integer.valueOf(max); }
   public Integer getTimeDuration() { return this.timeDuration; }
 
+  public void setListedUsersType(int t) { this.listedUsersType = Integer.valueOf(t); }
+  public Integer getListedUsersType() { return this.listedUsersType; }
   
   
   @Override

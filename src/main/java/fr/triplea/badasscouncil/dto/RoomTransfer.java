@@ -17,6 +17,8 @@ public class RoomTransfer
   private String purgeType;
   private int messagesLimit;
   private int timeDuration;
+  
+  private int listedUsersType;
 
   public RoomTransfer() {}
   
@@ -56,5 +58,8 @@ public class RoomTransfer
   
   public int getTimeDuration() { return timeDuration; }
   public void setTimeDuration(int n) { timeDuration = n; }
+
+  public int getListedUsersType() { return listedUsersType; }
+  public void setListedUsersType(int n) { listedUsersType = n; }
 
 }

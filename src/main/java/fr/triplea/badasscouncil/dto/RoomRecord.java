@@ -13,7 +13,8 @@ public record RoomRecord
   String notes,
   String purgeType,
   int messagesLimit,
-  int timeDuration
+  int timeDuration,
+  int listedUsersType
 )
 { 
 }

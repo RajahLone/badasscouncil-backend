@@ -29,6 +29,7 @@ import org.springframework.web.servlet.LocaleResolver;
 import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
+import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.dto.RoomRecord;
 import fr.triplea.badasscouncil.dto.RoomTransfer;
 import fr.triplea.badasscouncil.model.Room;
@@ -159,6 +160,8 @@ public class RoomController
       
       found.setMessagesLimit(room.getMessagesLimit());
       found.setTimeDuration(room.getTimeDuration());
+      
+      found.setListedUsersType(room.getListedUsersType());
 
                  
       roomRepository.saveAndFlush(found);
@@ -213,6 +216,8 @@ public class RoomController
         found.setMessagesLimit(room.getMessagesLimit());
         found.setTimeDuration(room.getTimeDuration());
 
+        found.setListedUsersType(room.getListedUsersType());
+
         
         roomRepository.saveAndFlush(found);
         
@@ -263,4 +268,48 @@ public class RoomController
     return ResponseEntity.notFound().build(); 
   }
 
+  
+  @GetMapping(value = "/users-list")
+  @PreAuthorize("hasRole('USER')")
+  public List<NickNameOptionList> getUsers(final Authentication authentication) 
+  { 
+    if (authentication != null)
+    {
+      List<NickNameOptionList> l = userRepository.getAll();
+
+      if (l != null) { return l; }
+    }
+    
+    return new ArrayList<NickNameOptionList>();
+  }
+
+  @GetMapping(value = "/allowed-list/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public List<NickNameOptionList> getAllowed(@PathVariable("id") int roomId, final Authentication authentication) 
+  { 
+    if (authentication != null)
+    {
+      List<NickNameOptionList> l = userRepository.getAllowedList(roomId);
+
+      if (l != null) { return l; }
+    }
+    
+    return new ArrayList<NickNameOptionList>();
+  }
+  
+  @GetMapping(value = "/disallowed-list/{id}")
+  @PreAuthorize("hasRole('USER')")
+  public List<NickNameOptionList> getDisallowed(@PathVariable("id") int roomId, final Authentication authentication) 
+  { 
+    if (authentication != null)
+    {
+      List<NickNameOptionList> l = userRepository.getDisallowedList(roomId);
+
+      if (l != null) { return l; }
+    }
+    
+    return new ArrayList<NickNameOptionList>();
+  }
+  
+  
 }

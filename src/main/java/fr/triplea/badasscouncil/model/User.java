@@ -1,10 +1,8 @@
 package fr.triplea.badasscouncil.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -139,12 +137,22 @@ public class User
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "dest")
   private List<Message> messagesDestinataire;
 
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "rooms_allowed_users", 
+             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"), 
+             inverseJoinColumns = @JoinColumn(name = "room_id", referencedColumnName = "room_id"))
+  private List<Room> roomsAllowed;
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "rooms_disallowed_users", 
+             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"), 
+             inverseJoinColumns = @JoinColumn(name = "room_id", referencedColumnName = "room_id"))
+  private List<Room> roomsDisallowed;
+  
   
   public User() { super(); }
 
-  
-  @Transient
-  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.getDefault());
   
   public void setCreatedOn(LocalDateTime d) { this.createdOn = d; }
   public LocalDateTime getCreatedOn() { return this.createdOn; }

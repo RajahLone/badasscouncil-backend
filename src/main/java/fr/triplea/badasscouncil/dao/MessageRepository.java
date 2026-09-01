@@ -3,6 +3,7 @@ package fr.triplea.badasscouncil.dao;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.repository.query.Param;
 
@@ -30,18 +31,21 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
   List<MessageShort> findNew(@Param("room") int room, @Param("user") int user, @Param("last") int last);
 
   
+  @Modifying(clearAutomatically = true)
   @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room ")
   void deleteAllByRoom(@Param("room") int room);
   
   @NativeQuery("SELECT DISTINCT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.room_id = :room AND m.message_id NOT IN (SELECT n.message_id FROM badasscouncil.messages AS n ORDER BY n.message_id DESC LIMIT :limit) ")
   long countMessagesLimited(@Param("room") int room, @Param("limit") int limit);
   
+  @Modifying(clearAutomatically = true)
   @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room AND m.message_id NOT IN (SELECT n.message_id FROM badasscouncil.messages AS n ORDER BY n.message_id DESC LIMIT :limit) ")
   void deleteMesagesLimited(@Param("room") int room, @Param("limit") int limit);
   
   @NativeQuery("SELECT DISTINCT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.room_id = :room AND :lifespan > 0 AND (m.created_on::timestamp + CONCAT('', :lifespan, ' minutes')::interval) < NOW() ")
   long countLifeLimited(@Param("room") int room, @Param("lifespan") int lifespan);
   
+  @Modifying(clearAutomatically = true)
   @NativeQuery("DELETE FROM badasscouncil.messages AS m WHERE m.room_id = :room AND :lifespan > 0 AND (m.created_on::timestamp + CONCAT('', :lifespan, ' minutes')::interval) < NOW() ")
   void deleteLifeLimited(@Param("room") int room, @Param("lifespan") int lifespan);
 
