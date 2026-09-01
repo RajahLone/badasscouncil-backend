@@ -7,8 +7,8 @@ User=root
 Group=root
 
 Type=exec
-ExecStart=java -jar /home/rajah/badasscouncil-backend-0.1.0.war
-WorkingDirectory=/home/rajah/badasscouncil-backend
+ExecStart=java -jar /<pathto>/badasscouncil-backend.war
+WorkingDirectory=/<pathto>/badasscouncil-backend
 SuccessExitStatus=143
 
 [Install]
