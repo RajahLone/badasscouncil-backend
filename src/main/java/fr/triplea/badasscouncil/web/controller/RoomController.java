@@ -112,7 +112,7 @@ public class RoomController
       {
         boolean granted = false;
         
-        if (user.hasRoles("ADMIN"))
+        if (user.hasRoles("ADMIN") || (found.getUser().getUserId().equals(user.getUserId())))
         {
           granted = true;
         }
@@ -414,7 +414,7 @@ public class RoomController
         {
           for (int i = 0; i < ids.size(); i++)
           {
-            if (!(userService.isAdmin(ids.get(i).intValue()))) { roomRepository.addDisallowedUser(roomId, ids.get(i).intValue()); }
+            roomRepository.addDisallowedUser(roomId, ids.get(i).intValue());
           }
         }
                 
