@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,6 +70,10 @@ public class RoomController
   private PasswordEncoder passwordEncoder;
 
 
+  protected static final int LISTED_USERS_TYPE_ALL        = 0;
+  protected static final int LISTED_USERS_TYPE_ALLOWED    = 1;
+  protected static final int LISTED_USERS_TYPE_DISALLOWED = 2;
+  
  
   @GetMapping(value = "/list")
   @PreAuthorize("hasRole('USER')")
@@ -80,8 +85,10 @@ public class RoomController
 
       if (found != null)
       {
-        return roomRepository.listRooms(); 
-      }
+        if (userService.isAdmin(null)) { return roomRepository.listRooms(); } 
+        
+        return roomRepository.listRooms(found.getUserId().intValue());
+       }
     }
     
     return new ArrayList<RoomRecord>();
@@ -103,24 +110,53 @@ public class RoomController
     {
       if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
       {
-        userService.setLastActivityOn(authentication);
+        boolean granted = false;
+        
+        if (user.hasRoles("ADMIN"))
+        {
+          granted = true;
+        }
+        else
+        {
+          switch(found.getListedUsersType())
+          {
+            case RoomController.LISTED_USERS_TYPE_ALL:
+              granted = true;
+              break;
+            case RoomController.LISTED_USERS_TYPE_ALLOWED:
+              List<Integer> a = roomRepository.findAllowedUsers(roomId);
+              if (a != null) { if (a.size() > 0) { if (a.contains(user.getUserId())) { granted = true; } } }
+              break;
+            case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+              granted = true;
+              List<Integer> d = roomRepository.findDisallowedUsers(roomId);
+              if (d != null) { if (d.size() > 0) { if (d.contains(user.getUserId())) { granted = false; } } }
+              break;
+          }
+        }
+        
+        if (granted)
+        {
+          userService.setLastActivityOn(authentication);
 
-        RoomTransfer r = new RoomTransfer();
-        
-        r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
-        r.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "");
-        r.setRoomId(found.getRoomId().intValue());   
-        r.setName(found.getName());
-        r.setState(found.getState().getState());
-        r.setOwnerId(found.getUser().getUserId().intValue());
-        r.setPassword("");
-        r.setTopic(found.getTopic());
-        r.setNotes(found.getNotes());
-        r.setPurgeType(found.getPurgeType().getPurgeType());
-        r.setMessagesLimit(found.getMessagesLimit().intValue());
-        r.setTimeDuration(found.getTimeDuration().intValue());    
-        
-        return ResponseEntity.ok(r);
+          RoomTransfer r = new RoomTransfer();
+          
+          r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
+          r.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "");
+          r.setOwnerId(found.getUser().getUserId().intValue());
+          r.setRoomId(found.getRoomId().intValue());   
+          r.setName(found.getName());
+          r.setTopic(found.getTopic());
+          r.setNotes(found.getNotes());
+          r.setState(found.getState().getState());
+          r.setPassword("");
+          r.setListedUsersType(found.getListedUsersType());
+          r.setPurgeType(found.getPurgeType().getPurgeType());
+          r.setMessagesLimit(found.getMessagesLimit().intValue());
+          r.setTimeDuration(found.getTimeDuration().intValue());    
+          
+          return ResponseEntity.ok(r);
+        }
       }
     }
     
@@ -143,16 +179,18 @@ public class RoomController
 
       Room found = new Room();
       
-      found.setName(room.getName());
-      found.setState(RoomState.ACTIVE);
       found.setEnabled(true);
-      
       found.setUser(user);
+
+      found.setName(room.getName());
+      found.setTopic(room.getTopic());
+      found.setNotes(room.getNotes());
+
+      found.setState(RoomState.ACTIVE);
       
       if (room.hasPassword()) { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim())); } else { found.setPasswordHash(""); } 
       
-      found.setTopic(room.getTopic());
-      found.setNotes(room.getNotes());
+      found.setListedUsersType(RoomController.LISTED_USERS_TYPE_ALL);
 
       if (room.getPurgeType().equals("MESSAGES_LIMITED")) { found.setPurgeType(RoomPurgeType.MESSAGES_LIMITED); }
       else if (room.getPurgeType().equals("TIME_LIMITED")) { found.setPurgeType(RoomPurgeType.TIME_LIMITED); }
@@ -161,8 +199,6 @@ public class RoomController
       found.setMessagesLimit(room.getMessagesLimit());
       found.setTimeDuration(room.getTimeDuration());
       
-      found.setListedUsersType(room.getListedUsersType());
-
                  
       roomRepository.saveAndFlush(found);
       
@@ -194,7 +230,11 @@ public class RoomController
       {
         userService.setLastActivityOn(authentication);
 
+        found.setEnabled(true);
+
         found.setName(room.getName());
+        found.setTopic(room.getTopic());
+        found.setNotes(room.getNotes());
 
         if (room.getState().equals("LOCKED")) { found.setState(RoomState.LOCKED); }
         else if (room.getState().equals("TRASHED")) { found.setState(RoomState.TRASHED); }
@@ -206,8 +246,7 @@ public class RoomController
           else { found.setPasswordHash(passwordEncoder.encode(salt + room.getPassword().trim()));  }
         } 
         
-        found.setTopic(room.getTopic());
-        found.setNotes(room.getNotes());
+        found.setListedUsersType(Math.max(RoomController.LISTED_USERS_TYPE_ALL, Math.min(room.getListedUsersType(), RoomController.LISTED_USERS_TYPE_DISALLOWED)));
 
         if (room.getPurgeType().equals("MESSAGES_LIMITED")) { found.setPurgeType(RoomPurgeType.MESSAGES_LIMITED); }
         else if (room.getPurgeType().equals("TIME_LIMITED")) { found.setPurgeType(RoomPurgeType.TIME_LIMITED); }
@@ -215,8 +254,6 @@ public class RoomController
         
         found.setMessagesLimit(room.getMessagesLimit());
         found.setTimeDuration(room.getTimeDuration());
-
-        found.setListedUsersType(room.getListedUsersType());
 
         
         roomRepository.saveAndFlush(found);
@@ -309,6 +346,86 @@ public class RoomController
     }
     
     return new ArrayList<NickNameOptionList>();
+  }
+  
+
+
+  @PutMapping(value = "/set-allowed/{id}")
+  @PreAuthorize("hasRole('USER')")
+  @Transactional
+  public ResponseEntity<Object> setAllowedUsers(@PathVariable("id") int roomId, @RequestBody(required = true) List<Integer> ids, final Authentication authentication, HttpServletRequest request) 
+  { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Room found = roomRepository.findById(roomId);
+
+    User user = userRepository.findByLoginName(authentication.getName());
+    
+    if ((found != null) && (user != null))
+    {
+      if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
+      {
+        userService.setLastActivityOn(authentication);
+
+        if (roomRepository.countAllowedUsers(roomId) > 0) { roomRepository.removeAllowedUsers(roomId); }
+                
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            roomRepository.addAllowedUser(roomId, ids.get(i).intValue());
+          }
+        }
+                
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("room.users.allowed.updated", null, locale));
+      
+        return ResponseEntity.ok(mt);
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
+  }
+  
+  @PutMapping(value = "/set-disallowed/{id}")
+  @PreAuthorize("hasRole('USER')")
+  @Transactional
+  public ResponseEntity<Object> setDisallowedUsers(@PathVariable("id") int roomId, @RequestBody(required = true) List<Integer> ids, final Authentication authentication, HttpServletRequest request) 
+  { 
+    if (authentication == null) { return ResponseEntity.notFound().build(); }
+
+    Locale locale = localeResolver.resolveLocale(request);
+
+    Room found = roomRepository.findById(roomId);
+
+    User user = userRepository.findByLoginName(authentication.getName());
+    
+    if ((found != null) && (user != null))
+    {
+      if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
+      {
+        userService.setLastActivityOn(authentication);
+
+        if (roomRepository.countDisallowedUsers(roomId) > 0) { roomRepository.removeDisallowedUsers(roomId); }
+                
+        if (ids.size() > 0)
+        {
+          for (int i = 0; i < ids.size(); i++)
+          {
+            if (!(userService.isAdmin(ids.get(i).intValue()))) { roomRepository.addDisallowedUser(roomId, ids.get(i).intValue()); }
+          }
+        }
+                
+        HomeInformationTransfer mt = new HomeInformationTransfer();
+        mt.setInfo(messageSource.getMessage("room.users.disallowed.updated", null, locale));
+      
+        return ResponseEntity.ok(mt);
+      }
+    }
+    
+    return ResponseEntity.notFound().build();
   }
   
   

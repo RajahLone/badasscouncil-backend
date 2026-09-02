@@ -55,7 +55,6 @@ public class MessageController
   @Autowired
   private RoomRepository roomRepository;
 
-  
   @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
   public List<NickNameOptionList> getNickNames(final Authentication authentication) 
@@ -109,7 +108,28 @@ public class MessageController
         
         if ((found != null) && (l >= 0)) 
         {         
-          mlist = messageRepository.findNew(r, found.getUserId(), l);
+          granted = false;
+          
+          if (!(found.hasRoles("ADMIN")))
+          {
+             switch(room.getListedUsersType())
+            {
+              case RoomController.LISTED_USERS_TYPE_ALL:
+                granted = true;
+                break;
+              case RoomController.LISTED_USERS_TYPE_ALLOWED:
+                List<Integer> a = roomRepository.findAllowedUsers(r);
+                if (a != null) { if (a.size() > 0) { if (a.contains(found.getUserId())) { granted = true; } } }
+                break;
+              case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+                granted = true;
+                List<Integer> d = roomRepository.findDisallowedUsers(r);
+                if (d != null) { if (d.size() > 0) { if (d.contains(found.getUserId())) { granted = false; } } }
+                break;
+            }
+          }
+
+          if (granted) { mlist = messageRepository.findNew(r, found.getUserId(), l); }
         }
       }
     }
@@ -155,7 +175,28 @@ public class MessageController
                 
         if ((found != null) && (l >= 0)) 
         { 
-          if (found.getNickName().equals(message.getNickName()))
+          granted = false;
+          
+          if (!(found.hasRoles("ADMIN")))
+          {
+             switch(room.getListedUsersType())
+            {
+              case RoomController.LISTED_USERS_TYPE_ALL:
+                granted = true;
+                break;
+              case RoomController.LISTED_USERS_TYPE_ALLOWED:
+                List<Integer> a = roomRepository.findAllowedUsers(r);
+                if (a != null) { if (a.size() > 0) { if (a.contains(found.getUserId())) { granted = true; } } }
+                break;
+              case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+                granted = true;
+                List<Integer> d = roomRepository.findDisallowedUsers(r);
+                if (d != null) { if (d.size() > 0) { if (d.contains(found.getUserId())) { granted = false; } } }
+                break;
+            }
+          }
+
+          if (found.getNickName().equals(message.getNickName()) && granted)
           {
             String ligne = message.getContent();
             

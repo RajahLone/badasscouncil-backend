@@ -133,9 +133,9 @@ public class Purge
             {
               messageRepository.deleteAllByRoom(r.getRoomId());
               
-              if (roomRepository.countAllowedUsers(r.getRoomId()) > 0) { roomRepository.deleteAllowedUsers(r.getRoomId()); }
+              if (roomRepository.countAllowedUsers(r.getRoomId()) > 0) { roomRepository.removeAllowedUsers(r.getRoomId()); }
               
-              if (roomRepository.countDisallowedUsers(r.getRoomId()) > 0) { roomRepository.deleteDisallowedUsers(r.getRoomId()); }
+              if (roomRepository.countDisallowedUsers(r.getRoomId()) > 0) { roomRepository.removeDisallowedUsers(r.getRoomId()); }
 
               roomRepository.delete(r);
             }

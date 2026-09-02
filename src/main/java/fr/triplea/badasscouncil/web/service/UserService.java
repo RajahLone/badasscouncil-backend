@@ -134,6 +134,22 @@ public class UserService
     return false;
   }
 
+
+  /** returns true if user has ADMIN */
+  public final synchronized boolean isAdmin(final Integer userId)
+  {
+    if (userId > 0)
+    {
+      User found = userRepository.findById(userId.intValue());
+      
+      if (found != null)
+      {
+        return found.hasRoles("ADMIN");
+      }
+    }
+    
+    return false;
+  }
   
   /** set user's last activity timestamp and change SLEEPING status to ACTIVE */
   public final synchronized void setLastActivityOn(final Authentication authentication)
