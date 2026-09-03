@@ -108,55 +108,52 @@ public class RoomController
 
     if ((found != null) && (user != null))
     {
-      if ((found.getRoomId().intValue() == roomId) && (found.getUser().getUserId().equals(user.getUserId()) || user.hasRoles("REGUL", "ADMIN")))
+      boolean granted = false;
+      
+      if (user.hasRoles("ADMIN") || (found.getUser().getUserId().equals(user.getUserId())))
       {
-        boolean granted = false;
-        
-        if (user.hasRoles("ADMIN") || (found.getUser().getUserId().equals(user.getUserId())))
+        granted = true;
+      }
+      else
+      {
+        switch(found.getListedUsersType())
         {
-          granted = true;
+          case RoomController.LISTED_USERS_TYPE_ALL:
+            granted = true;
+            break;
+          case RoomController.LISTED_USERS_TYPE_ALLOWED:
+            List<Integer> a = roomRepository.findAllowedUsers(roomId);
+            if (a != null) { if (a.size() > 0) { if (a.contains(user.getUserId())) { granted = true; } } }
+            break;
+          case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+            granted = true;
+            List<Integer> d = roomRepository.findDisallowedUsers(roomId);
+            if (d != null) { if (d.size() > 0) { if (d.contains(user.getUserId())) { granted = false; } } }
+            break;
         }
-        else
-        {
-          switch(found.getListedUsersType())
-          {
-            case RoomController.LISTED_USERS_TYPE_ALL:
-              granted = true;
-              break;
-            case RoomController.LISTED_USERS_TYPE_ALLOWED:
-              List<Integer> a = roomRepository.findAllowedUsers(roomId);
-              if (a != null) { if (a.size() > 0) { if (a.contains(user.getUserId())) { granted = true; } } }
-              break;
-            case RoomController.LISTED_USERS_TYPE_DISALLOWED:
-              granted = true;
-              List<Integer> d = roomRepository.findDisallowedUsers(roomId);
-              if (d != null) { if (d.size() > 0) { if (d.contains(user.getUserId())) { granted = false; } } }
-              break;
-          }
-        }
-        
-        if (granted)
-        {
-          userService.setLastActivityOn(authentication);
+      }
+      
+      if (granted)
+      {
+        userService.setLastActivityOn(authentication);
 
-          RoomTransfer r = new RoomTransfer();
-          
-          r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
-          r.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "");
-          r.setOwnerId(found.getUser().getUserId().intValue());
-          r.setRoomId(found.getRoomId().intValue());   
-          r.setName(found.getName());
-          r.setTopic(found.getTopic());
-          r.setNotes(found.getNotes());
-          r.setState(found.getState().getState());
-          r.setPassword("");
-          r.setListedUsersType(found.getListedUsersType());
-          r.setPurgeType(found.getPurgeType().getPurgeType());
-          r.setMessagesLimit(found.getMessagesLimit().intValue());
-          r.setTimeDuration(found.getTimeDuration().intValue());    
-          
-          return ResponseEntity.ok(r);
-        }
+        RoomTransfer r = new RoomTransfer();
+        
+        r.setCreatedOn(found.hasCreatedOn() ? dtf.format(found.getCreatedOn()) : "");
+        r.setUpdatedOn(found.hasUpdatedOn() ? dtf.format(found.getUpdatedOn()) : "");
+        r.setOwnerId(found.getUser().getUserId().intValue());
+        r.setRoomId(found.getRoomId().intValue());   
+        r.setName(found.getName());
+        r.setTopic(found.getTopic());
+        r.setNotes(found.getNotes());
+        r.setState(found.getState().getState());
+        r.setPassword("");
+        r.setListedUsersType(found.getListedUsersType());
+        r.setPurgeType(found.getPurgeType().getPurgeType());
+        r.setMessagesLimit(found.getMessagesLimit().intValue());
+        r.setTimeDuration(found.getTimeDuration().intValue());    
+        
+        return ResponseEntity.ok(r);
       }
     }
     
