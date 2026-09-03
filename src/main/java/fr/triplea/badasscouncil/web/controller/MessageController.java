@@ -110,7 +110,11 @@ public class MessageController
         {         
           granted = false;
           
-          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) { } else 
+          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) 
+          { 
+            granted = true; 
+          } 
+          else 
           {
              switch(room.getListedUsersType())
             {
@@ -177,7 +181,11 @@ public class MessageController
         { 
           granted = false;
           
-          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) { } else 
+          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) 
+          { 
+            granted = true; 
+          } 
+          else 
           {
              switch(room.getListedUsersType())
             {

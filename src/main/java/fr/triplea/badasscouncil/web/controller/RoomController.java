@@ -85,7 +85,7 @@ public class RoomController
 
       if (found != null)
       {
-        if (userService.isAdmin(null)) { return roomRepository.listRooms(); } 
+        if (userService.isAdmin(found.getUserId().intValue())) { return roomRepository.listRooms(); } 
         
         return roomRepository.listRooms(found.getUserId().intValue());
        }
