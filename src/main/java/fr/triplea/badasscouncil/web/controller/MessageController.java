@@ -23,6 +23,7 @@ import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dto.MessageShort;
 import fr.triplea.badasscouncil.dto.MessageShortPass;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
+import fr.triplea.badasscouncil.dto.Pagination;
 import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.RoomState;
@@ -57,7 +58,7 @@ public class MessageController
 
   @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
-  public List<NickNameOptionList> getNickNames(final Authentication authentication) 
+  public List<NickNameOptionList> listNickNames(final Authentication authentication) 
   { 
     if (authentication != null)
     {
@@ -72,6 +73,66 @@ public class MessageController
     }
     
     return new ArrayList<NickNameOptionList>();
+  }
+
+  @GetMapping(value = "/count/{room}")
+  @PreAuthorize("hasRole('USER')")
+  public Pagination count(@PathVariable(name="room") int r, final Authentication authentication)
+  { 
+    int n = 0;
+    
+    Room room = roomRepository.findById(r);
+
+    if (room != null) 
+    { 
+      boolean granted = true;
+            
+      if (room.getState().equals(RoomState.LOCKED))
+      {
+        granted = false;
+        
+        if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
+      }
+      
+      if ((authentication != null) && granted)
+      {
+        userService.setLastActivityOn(authentication);
+
+        User found = userRepository.findByLoginName(authentication.getName());
+        
+        if (found != null) 
+        {         
+          granted = false;
+          
+          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) 
+          { 
+            granted = true; 
+          } 
+          else 
+          {
+             switch(room.getListedUsersType())
+            {
+              case RoomController.LISTED_USERS_TYPE_ALL:
+                granted = true;
+                break;
+              case RoomController.LISTED_USERS_TYPE_ALLOWED:
+                List<Integer> a = roomRepository.findAllowedUsers(r);
+                if (a != null) { if (a.size() > 0) { if (a.contains(found.getUserId())) { granted = true; } } }
+                break;
+              case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+                granted = true;
+                List<Integer> d = roomRepository.findDisallowedUsers(r);
+                if (d != null) { if (d.size() > 0) { if (d.contains(found.getUserId())) { granted = false; } } }
+                break;
+            }
+          }
+
+          if (granted) { n = (int)messageRepository.count(r); }
+        }
+      }
+    }
+        
+    return new Pagination(n, 500, 1, 0); 
   }
 
   @PostMapping(value = "/new/{room}/{last}")
@@ -143,12 +204,79 @@ public class MessageController
     return mlist; 
   }
 
+  @PostMapping(value = "/old/{room}/{first}")
+  @PreAuthorize("hasRole('USER')")
+  public List<MessageShort> getOld(@PathVariable(name="room") int r, @PathVariable(name="first") int f, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  { 
+    List<MessageShort> mlist = null;
+
+    Room room = roomRepository.findById(r);
+
+    if (room != null) 
+    { 
+      boolean granted = true;
+      
+      if (room.hasPassword())
+      {
+        granted = false;
+        
+        if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+      }
+      
+      if (room.getState().equals(RoomState.LOCKED))
+      {
+        granted = false;
+        
+        if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
+      }
+      
+      if ((authentication != null) && granted)
+      {
+        userService.setLastActivityOn(authentication);
+
+        User found = userRepository.findByLoginName(authentication.getName());
+        
+        if ((found != null) && (f >= 0)) 
+        {         
+          granted = false;
+          
+          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) 
+          { 
+            granted = true; 
+          } 
+          else 
+          {
+             switch(room.getListedUsersType())
+            {
+              case RoomController.LISTED_USERS_TYPE_ALL:
+                granted = true;
+                break;
+              case RoomController.LISTED_USERS_TYPE_ALLOWED:
+                List<Integer> a = roomRepository.findAllowedUsers(r);
+                if (a != null) { if (a.size() > 0) { if (a.contains(found.getUserId())) { granted = true; } } }
+                break;
+              case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+                granted = true;
+                List<Integer> d = roomRepository.findDisallowedUsers(r);
+                if (d != null) { if (d.size() > 0) { if (d.contains(found.getUserId())) { granted = false; } } }
+                break;
+            }
+          }
+
+          if (granted) { mlist = messageRepository.findOld(r, found.getUserId(), f); }
+        }
+      }
+    }
+
+    if (mlist == null) { mlist = new ArrayList<MessageShort>(); }
+        
+    return mlist; 
+  }
+
   @PostMapping(value = "/add/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addMessage(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  public List<MessageShort> add(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
-    // TODO: pagination (500 per 500, backlogging)
-    
     List<MessageShort> mlist = null;
 
     Room room = roomRepository.findById(r);

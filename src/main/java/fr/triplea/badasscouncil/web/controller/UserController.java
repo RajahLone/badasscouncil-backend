@@ -154,7 +154,7 @@ public class UserController
 
   @GetMapping(value = "/pagination")
   @PreAuthorize("hasRole('USER')")
-  public Pagination getCount(
+  public Pagination count(
       @RequestParam("name") String nameFilter, 
       @RequestParam("status") String statusFilter, 
       @RequestParam(name="page", defaultValue="0") int current, 

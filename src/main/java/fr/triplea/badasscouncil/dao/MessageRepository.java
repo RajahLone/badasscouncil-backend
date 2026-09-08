@@ -13,7 +13,7 @@ import fr.triplea.badasscouncil.model.Message;
 public interface MessageRepository extends JpaRepository<Message, Integer> 
 {
 
-  @NativeQuery("SELECT DISTINCT "
+  @NativeQuery("SELECT n.* FROM (SELECT DISTINCT "
              + "  TO_CHAR(m.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
              + "  m.message_id, "
              + "  p.nick_name, "
@@ -27,8 +27,31 @@ public interface MessageRepository extends JpaRepository<Message, Integer>
              + "     (m.room_id = :room) "
              + " AND (m.message_id > :last) "
              + " AND ((m.dest_id = :user) OR (m.user_id = :user) OR (m.dest_id IS NULL)) "
-             + "ORDER BY m.message_id ASC ")
+             + "ORDER BY m.message_id DESC "
+             + "LIMIT 500) AS n ORDER BY n.message_id ASC ")
   List<MessageShort> findNew(@Param("room") int room, @Param("user") int user, @Param("last") int last);
+
+  @NativeQuery("SELECT DISTINCT "
+      + "  TO_CHAR(m.created_on, 'MM-DD-YYYY HH24:MI:SS') as created_on, "
+      + "  m.message_id, "
+      + "  p.nick_name, "
+      + "  m.content, "
+      + "  CASE WHEN m.dest_id IS NULL THEN 0 ELSE m.dest_id END AS dest_id, "
+      + "  CASE WHEN m.dest_id IS NULL THEN '' ELSE d.nick_name END AS dest_name "
+      + "FROM badasscouncil.messages AS m "
+      + "INNER JOIN badasscouncil.users AS p ON m.user_id = p.user_id "
+      + "LEFT JOIN badasscouncil.users AS d ON m.dest_id = d.user_id "
+      + "WHERE "
+      + "     (m.room_id = :room) "
+      + " AND (m.message_id < :first) "
+      + " AND ((m.dest_id = :user) OR (m.user_id = :user) OR (m.dest_id IS NULL)) "
+      + "ORDER BY m.message_id DESC "
+      + "LIMIT 500 ")
+  List<MessageShort> findOld(@Param("room") int room, @Param("user") int user, @Param("first") int first);
+
+  
+  @NativeQuery("SELECT COUNT(m.*) FROM badasscouncil.messages AS m WHERE m.room_id = :room ")
+  long count(@Param("room") int room);
 
   
   @Modifying(clearAutomatically = true)

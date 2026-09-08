@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -9,11 +10,19 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import fr.triplea.badasscouncil.dao.MessageRepository;
 import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.RoleRepository;
+import fr.triplea.badasscouncil.dao.RoomRepository;
+import fr.triplea.badasscouncil.dao.UserRepository;
 import fr.triplea.badasscouncil.dao.VariableRepository;
+import fr.triplea.badasscouncil.dto.NickNameOptionList;
+import fr.triplea.badasscouncil.dto.RoomRecord;
+import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Quote;
 import fr.triplea.badasscouncil.model.Role;
+import fr.triplea.badasscouncil.model.Room;
+import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.Variable;
 
 @Component
@@ -21,15 +30,6 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
 {
   
   boolean initialise = false;
-
-  @Autowired
-  private RoleRepository roleRepository;
-
-  @Autowired
-  private VariableRepository variableRepository;
-
-  @Autowired
-  private QuoteRepository quoteRepository;
 
   @Override
   @Transactional
@@ -77,8 +77,14 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addQuote(8, "The name may sound crude, but you are not one for senseless niceties.");
     addQuote(9, "You're not allowed to think about the Dungeon Dimensions.");
     
+    //addLinesForTests();
+    
     initialise = true;
   }
+  
+
+  @Autowired
+  private RoleRepository roleRepository;
 
   @Transactional
   public Role addRoleIfMissing(final String libelle) 
@@ -96,6 +102,10 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
      
     return role;
   }
+
+
+  @Autowired
+  private VariableRepository variableRepository;
 
   @Transactional
   public String addVariableIfMissing(final String type, final String code, final String content, final String notes) 
@@ -117,6 +127,10 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     return str;
   }
 
+  
+  @Autowired
+  private QuoteRepository quoteRepository;
+
   @Transactional
   public void addQuote(final int id, final String content) 
   {
@@ -129,6 +143,52 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
       quote.setContent(content); 
 
       quote = quoteRepository.saveAndFlush(quote);
+    }
+  }
+  
+
+  @Autowired
+  private RoomRepository roomRepository;
+
+  @Autowired
+  private UserRepository userRepository;
+  
+  @Autowired
+  private MessageRepository messageRepository;
+
+  @Transactional
+  public void addLinesForTests() 
+  {
+    List<RoomRecord> rl = roomRepository.listRooms();
+    List<NickNameOptionList> ul = userRepository.getAll();
+ 
+    if ((rl != null) && (ul != null))
+    {
+      if ((rl.size() > 0) && (ul.size() > 0))
+      {
+        long n = messageRepository.count(rl.get(0).roomId()) - 1;
+        
+        if (n > 3000) { return; }
+        
+        Room r = roomRepository.findById(rl.get(0).roomId());
+        User u = userRepository.findById(ul.get(0).userId().intValue());
+        
+        if ((r != null) && (u != null))
+        {
+          for (int i = 0; i < 1000; i++)
+          {
+            Message m = new Message();
+            
+            m.setMessageId(null);
+            m.setRoom(r);
+            m.setUser(u);
+            m.setContent("test line " + (n + i));
+            m.setDest(null);
+            
+            messageRepository.saveAndFlush(m);
+          }
+        }
+      }
     }
   }
   
