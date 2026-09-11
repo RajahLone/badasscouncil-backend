@@ -24,6 +24,7 @@ import fr.triplea.badasscouncil.model.Role;
 import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.model.Variable;
+import fr.triplea.badasscouncil.web.service.EmojiService;
 
 @Component
 public class CreateDefaultValues implements ApplicationListener<ContextRefreshedEvent>
@@ -34,7 +35,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
   @Override
   @Transactional
   public void onApplicationEvent(ContextRefreshedEvent event) 
-  {
+  {    
     if (initialise) { return; } 
 
     Locale.setDefault(Locale.ENGLISH);
@@ -49,6 +50,7 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
         
     if (tz != null) { TimeZone.setDefault(TimeZone.getTimeZone(tz)); } 
     
+    addVariableIfMissing("Application", "WHOLE_EMOJIS", "FALSE", "if TRUE, whole emojis list is downloaded to client, else only U+ singletons characters are displayed");
     
     addVariableIfMissing("Messages", "HOME_ERROR", " ", "If not blank, this error message will be displayed for all (even not logged people) on the home page.");
     addVariableIfMissing("Messages", "HOME_WARN", " ", "If not blank, this warning message will be displayed for all (even not logged people) on the home page.");
@@ -76,6 +78,8 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     addQuote(7, "A hidden village tucked in a narrow valley between steep woods.");
     addQuote(8, "The name may sound crude, but you are not one for senseless niceties.");
     addQuote(9, "You're not allowed to think about the Dungeon Dimensions.");
+    
+    loadEmojis();
     
     //addLinesForTests();
     
@@ -192,5 +196,9 @@ public class CreateDefaultValues implements ApplicationListener<ContextRefreshed
     }
   }
   
-  
+  @Autowired
+  private EmojiService emojiService;
+      
+  public void loadEmojis() { emojiService.load(); }
+
 }

@@ -33,5 +33,7 @@ public class VariableService
 
     return value;
   }
-      
+
+  public boolean isTRUE(String type, String key) { String s = variableRepository.findByFamilyAndCode(type, key); if (s != null) {  if (s.equalsIgnoreCase("TRUE")) { return true; } } return false; }
+
 }

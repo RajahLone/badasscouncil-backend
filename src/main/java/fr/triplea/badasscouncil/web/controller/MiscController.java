@@ -1,6 +1,8 @@
 package fr.triplea.badasscouncil.web.controller;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.ItemCountTransfer;
 import fr.triplea.badasscouncil.model.Quote;
+import fr.triplea.badasscouncil.web.service.EmojiService;
 import fr.triplea.badasscouncil.web.service.UserService;
 import fr.triplea.badasscouncil.web.service.VariableService;
 
@@ -40,6 +43,9 @@ public class MiscController
 
   @Autowired
   private QuoteRepository quoteRepository;
+  
+  @Autowired
+  private EmojiService emojiService;
 
 
   @GetMapping(value = "/welcome")
@@ -135,6 +141,24 @@ public class MiscController
     if (quote == null) { quote = quoteRepository.getRandom(); }
     
     return ResponseEntity.ok(quote); 
+  }
+  
+  @GetMapping(value = { "/emojis"})
+  public List<String> getEmojis(final Authentication authentication) 
+  { 
+    if (authentication != null)
+    {
+      if (variableService.isTRUE("Application", "WHOLE_EMOJIS"))
+      {
+        return emojiService.getTotalList();
+      }
+      else 
+      {
+        return emojiService.getShortList();
+      }
+    }
+         
+    return new ArrayList<String>(); 
   }
 
 
