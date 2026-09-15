@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import fr.triplea.badasscouncil.dao.ImageRepository;
 import fr.triplea.badasscouncil.dao.MessageRepository;
 import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
@@ -24,6 +27,7 @@ import fr.triplea.badasscouncil.dto.MessageShort;
 import fr.triplea.badasscouncil.dto.MessageShortPass;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.dto.Pagination;
+import fr.triplea.badasscouncil.model.Image;
 import fr.triplea.badasscouncil.model.Message;
 import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.RoomState;
@@ -55,7 +59,11 @@ public class MessageController
 
   @Autowired
   private RoomRepository roomRepository;
+  
+  @Autowired
+  private ImageRepository imageRepository;
 
+  
   @GetMapping(value = "/nickname-list")
   @PreAuthorize("hasRole('USER')")
   public List<NickNameOptionList> listNickNames(final Authentication authentication) 
@@ -137,7 +145,7 @@ public class MessageController
 
   @PostMapping(value = "/new/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getNew(@PathVariable(name="room") int r, @PathVariable(name="last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  public List<MessageShort> getNewLines(@PathVariable(name="room") int r, @PathVariable(name="last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -206,7 +214,7 @@ public class MessageController
 
   @PostMapping(value = "/old/{room}/{first}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> getOld(@PathVariable(name="room") int r, @PathVariable(name="first") int f, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  public List<MessageShort> getOldLines(@PathVariable(name="room") int r, @PathVariable(name="first") int f, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -275,7 +283,7 @@ public class MessageController
 
   @PostMapping(value = "/add/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> add(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  public List<MessageShort> addLine(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -346,6 +354,113 @@ public class MessageController
               m.setRoom(room);
               m.setUser(found);
               m.setContent(ligne);
+              
+              User dest = userRepository.findById(message.getDestId());
+              
+              if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
+              
+              messageRepository.saveAndFlush(m);
+            }
+            
+            mlist = messageRepository.findNew(r, found.getUserId(), l);
+          }
+        }
+      }
+    }
+
+    if (mlist == null) { mlist = new ArrayList<MessageShort>(); }
+    
+    return mlist; 
+  }
+  
+  @PostMapping(value = "/img/{room}/{last}")
+  @PreAuthorize("hasRole('USER')")
+  public List<MessageShort> addImages(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestPart(required = true) MessageShortPass message, @RequestPart(required = true) List<MultipartFile> files, final Authentication authentication)
+  { 
+    List<MessageShort> mlist = null;
+
+    Room room = roomRepository.findById(r);
+
+    if (room != null) 
+    { 
+      boolean granted = true;
+      
+      if (room.hasPassword())
+      {
+        granted = false;
+        
+        if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+      }
+      
+      if (room.getState().equals(RoomState.LOCKED))
+      {
+        granted = false;
+        
+        if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
+      }
+      
+      if ((authentication != null) && (message != null) && (files != null) && granted)
+      {
+        userService.setLastActivityOn(authentication);
+
+        User found = userRepository.findByLoginName(authentication.getName());
+                
+        if ((found != null) && (l >= 0)) 
+        { 
+          granted = false;
+          
+          if (found.hasRoles("ADMIN") || (room.getUser().getUserId().equals(found.getUserId()))) 
+          { 
+            granted = true; 
+          } 
+          else 
+          {
+             switch(room.getListedUsersType())
+            {
+              case RoomController.LISTED_USERS_TYPE_ALL:
+                granted = true;
+                break;
+              case RoomController.LISTED_USERS_TYPE_ALLOWED:
+                List<Integer> a = roomRepository.findAllowedUsers(r);
+                if (a != null) { if (a.size() > 0) { if (a.contains(found.getUserId())) { granted = true; } } }
+                break;
+              case RoomController.LISTED_USERS_TYPE_DISALLOWED:
+                granted = true;
+                List<Integer> d = roomRepository.findDisallowedUsers(r);
+                if (d != null) { if (d.size() > 0) { if (d.contains(found.getUserId())) { granted = false; } } }
+                break;
+            }
+          }
+
+          if (found.getNickName().equals(message.getNickName()) && granted)
+          {
+            String ligne = message.getContent();
+            
+            if (ligne == null) { ligne = ""; }
+            
+            if (ligne.isBlank() && (files.size() > 0))
+            {
+              StringBuffer sb = new StringBuffer();
+              
+              for (int f = 0; f < files.size(); f++)
+              {
+                Image i = new Image();
+                
+                i.setImageId(null);
+                i.setEnabled(true);
+                i.setUser(found);
+                
+                imageRepository.saveAndFlush(i);
+                
+                sb.append("<img id=\"" + i.getImageId() + "\"/> ");
+              }
+              
+              Message m = new Message();
+              
+              m.setMessageId(null);
+              m.setRoom(room);
+              m.setUser(found);
+              m.setContent(sb.toString());
               
               User dest = userRepository.findById(message.getDestId());
               
