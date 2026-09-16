@@ -21,6 +21,7 @@ import io.hypersistence.utils.hibernate.type.basic.Inet;
 import io.hypersistence.utils.hibernate.type.basic.PostgreSQLInetType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -72,6 +73,10 @@ public class Image
   @Type(PostgreSQLInetType.class)
   @Column(name = "ip_address", columnDefinition = "inet")
   private Inet ipAddress;
+  
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name="dest_id", referencedColumnName="user_id")
+  private User dest;
 
   @Column(length = 1024)
   private String fileName;
@@ -122,6 +127,9 @@ public class Image
   public void setIpAddress(Inet ip) { this.ipAddress = ip; }
   public void setIpAddress(String ip) { this.ipAddress = new Inet(ip); }
   public String getIpAddress() { return this.ipAddress.getAddress(); }
+
+  public void setDest(User d) { this.dest = d; }
+  public User getDest() { return this.dest; }
   
 
   
@@ -172,6 +180,7 @@ public class Image
     result = (prime * result) + ((getMessage() == null) ? 0 : getMessage().hashCode());
     result = (prime * result) + ((getUser() == null) ? 0 : getUser().hashCode());
     result = (prime * result) + ((getIpAddress() == null) ? 0 : getIpAddress().hashCode());
+    result = (prime * result) + ((getDest() == null) ? 0 : getDest().hashCode());
     return result;
   }
 
@@ -196,6 +205,7 @@ public class Image
     builder.append("Attachment [id=").append(imageId)
            .append(", message=").append(message)
            .append(", user=").append(user)
+           .append(", dest=").append(dest)
            .append(", IP=").append(ipAddress)
            .append(", created=").append(createdOn)
            .append(", updated=").append(updatedOn)

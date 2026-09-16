@@ -395,7 +395,7 @@ public class MessageController
       
       if (files.length > 0)
       {
-        if (files[0].getContentType().contains("application/json"))
+        if (files[0].getContentType().contains("application/json")) // first file is json for MessageShortPass, next are image files
         {
           ObjectMapper mapper = new ObjectMapper();
           
@@ -475,20 +475,26 @@ public class MessageController
             {
               try 
               {                
-                Image i = new Image();
-                
-                i.setImageId(null);
-                i.setEnabled(true);
-                i.setIpAddress(new Inet(this.getClientIP(request)));
-                i.setMessage(m);
-                i.setUser(found);
-                i.setFileName(files[f].getOriginalFilename());
-                i.generateThumbnail(files[f].getBytes());
-                i.setData(files[f].getBytes());
+                if (files[f].getContentType().startsWith("image/"))
+                {
+                  Image i = new Image();
+                  
+                  i.setImageId(null);
+                  i.setEnabled(true);
+                  i.setIpAddress(new Inet(this.getClientIP(request)));
+                  i.setMessage(m);
+                  i.setUser(found);
+                  if (dest != null) { i.setDest(dest); } else { i.setDest(null); }
+                  i.setFileName(files[f].getOriginalFilename());
+                  i.generateThumbnail(files[f].getBytes());
+                  i.setData(files[f].getBytes());
 
-                imageRepository.saveAndFlush(i);
+                  imageRepository.saveAndFlush(i);
 
-                sb.append("<img id=\"" + i.getImageId() + "\"/> ");
+                  sb.append("img_" + i.getImageId());
+                  
+                  if (f < (files.length - 1)) { sb.append("|"); }
+                }
               } 
               catch (IOException e) { LOG.error(files[f].getName() + " -> " + e.toString()); }
             }

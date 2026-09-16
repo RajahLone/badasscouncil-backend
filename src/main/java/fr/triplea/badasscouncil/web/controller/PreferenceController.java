@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.triplea.badasscouncil.model.Preference;
 import fr.triplea.badasscouncil.web.service.PreferenceService;
 import fr.triplea.badasscouncil.web.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/preference")
@@ -31,11 +32,10 @@ public class PreferenceController
   
   @GetMapping(value = "/get")
   @PreAuthorize("hasRole('USER')")
-  public String get(
-      @RequestParam(name = "action", required = true) int actionId, 
-      final Authentication authentication
-      ) 
+  public String get(@RequestParam(name = "action", required = true) int actionId, final Authentication authentication, HttpServletResponse response) 
   { 
+    response.setContentType("text/plain");
+    
     return preferenceService.getString(actionId, authentication);
   }
 

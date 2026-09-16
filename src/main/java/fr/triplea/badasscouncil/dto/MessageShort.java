@@ -7,7 +7,8 @@ public record MessageShort
   String nickName,
   String content,
   int destId,
-  String destName
+  String destName,
+  boolean thumbnails
 ) 
 {
 }
