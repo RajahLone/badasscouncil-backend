@@ -1,5 +1,6 @@
 package fr.triplea.badasscouncil.web.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,9 +17,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.triplea.badasscouncil.dao.ImageRepository;
 import fr.triplea.badasscouncil.dao.MessageRepository;
@@ -33,6 +37,8 @@ import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.RoomState;
 import fr.triplea.badasscouncil.model.User;
 import fr.triplea.badasscouncil.web.service.UserService;
+import io.hypersistence.utils.hibernate.type.basic.Inet;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/chat")
@@ -373,23 +379,39 @@ public class MessageController
     return mlist; 
   }
   
-  @PostMapping(value = "/img/{room}/{last}")
+  @PostMapping(value = "/img/{room}/{last}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addImages(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestPart(required = true) MessageShortPass message, @RequestPart(required = true) List<MultipartFile> files, final Authentication authentication)
+  public List<MessageShort> addImages(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestParam(name="file") MultipartFile[] files, final Authentication authentication, HttpServletRequest request)
   { 
     List<MessageShort> mlist = null;
 
     Room room = roomRepository.findById(r);
 
-    if (room != null) 
+    MessageShortPass message = null;
+    
+    if ((room != null) && (files != null)) 
     { 
       boolean granted = true;
+      
+      if (files.length > 0)
+      {
+        if (files[0].getContentType().contains("application/json"))
+        {
+          ObjectMapper mapper = new ObjectMapper();
+          
+          try { message = mapper.readValue(files[0].getBytes(), MessageShortPass.class); } catch (Exception e) { LOG.error(e.toString()); message = null; }
+
+          LOG.info("message -> " + files[0].getContentType());
+        }
+      }
+
+      LOG.info("n=" + files.length);
       
       if (room.hasPassword())
       {
         granted = false;
-        
-        if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; }
+                
+        if (message != null) { if (passwordEncoder.matches(salt + message.getPassword(), room.getPasswordHash())) { granted = true; } }
       }
       
       if (room.getState().equals(RoomState.LOCKED))
@@ -399,7 +421,7 @@ public class MessageController
         if (userService.hasSameId(authentication, room.getUser().getUserId()) || userService.canRegulate(authentication)) { granted = true; }
       }
       
-      if ((authentication != null) && (message != null) && (files != null) && granted)
+      if ((authentication != null) && (message != null) && (files.length > 1) && granted)
       {
         userService.setLastActivityOn(authentication);
 
@@ -434,40 +456,46 @@ public class MessageController
 
           if (found.getNickName().equals(message.getNickName()) && granted)
           {
-            String ligne = message.getContent();
+            Message m = new Message();
             
-            if (ligne == null) { ligne = ""; }
+            m.setMessageId(null);
+            m.setRoom(room);
+            m.setUser(found);
+            m.setContent("");
             
-            if (ligne.isBlank() && (files.size() > 0))
+            User dest = userRepository.findById(message.getDestId());
+            
+            if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
+
+            messageRepository.saveAndFlush(m);
+
+            StringBuffer sb = new StringBuffer();
+            
+            for (int f = 1; f < files.length; f++)
             {
-              StringBuffer sb = new StringBuffer();
-              
-              for (int f = 0; f < files.size(); f++)
-              {
+              try 
+              {                
                 Image i = new Image();
                 
                 i.setImageId(null);
                 i.setEnabled(true);
+                i.setIpAddress(new Inet(this.getClientIP(request)));
+                i.setMessage(m);
                 i.setUser(found);
-                
+                i.setFileName(files[f].getOriginalFilename());
+                i.generateThumbnail(files[f].getBytes());
+                i.setData(files[f].getBytes());
+
                 imageRepository.saveAndFlush(i);
-                
+
                 sb.append("<img id=\"" + i.getImageId() + "\"/> ");
-              }
-              
-              Message m = new Message();
-              
-              m.setMessageId(null);
-              m.setRoom(room);
-              m.setUser(found);
-              m.setContent(sb.toString());
-              
-              User dest = userRepository.findById(message.getDestId());
-              
-              if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
-              
-              messageRepository.saveAndFlush(m);
+              } 
+              catch (IOException e) { LOG.error(files[f].getName() + " -> " + e.toString()); }
             }
+            
+            m.setContent(sb.toString());
+            
+            messageRepository.saveAndFlush(m);
             
             mlist = messageRepository.findNew(r, found.getUserId(), l);
           }
@@ -480,4 +508,13 @@ public class MessageController
     return mlist; 
   }
   
+  private final String getClientIP(HttpServletRequest request) 
+  {
+    final String h = request.getHeader("X-Forwarded-For");
+    
+    if (h != null) { if (!(h.isBlank())) { if (!(h.contains(request.getRemoteAddr()))) { return h.split(",")[0]; } } } 
+    
+    return request.getRemoteAddr();
+  }
+
 }

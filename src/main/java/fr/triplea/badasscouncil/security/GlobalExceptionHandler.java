@@ -38,7 +38,7 @@ public class GlobalExceptionHandler
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<JsonErrorResponse> handleAllExceptions(Exception ex) 
   {
-    LOG.error(ex.getMessage()); //ex.printStackTrace();
+    LOG.error(ex.getMessage()); // ex.printStackTrace();
     
     String message =  ex.getMessage();
     

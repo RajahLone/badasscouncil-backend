@@ -13,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -56,6 +57,10 @@ public class Image
   private Boolean enabled = true;
   
   @ManyToOne
+  @JoinColumn(name="message_id", referencedColumnName="message_id")
+  private Message message;
+  
+  @ManyToOne
   @JoinColumn(name="user_id", referencedColumnName="user_id")
   private User user;
   
@@ -67,6 +72,9 @@ public class Image
   @Type(PostgreSQLInetType.class)
   @Column(name = "ip_address", columnDefinition = "inet")
   private Inet ipAddress;
+
+  @Column(length = 1024)
+  private String fileName;
 
   @Lob @JdbcTypeCode(Types.BINARY)
   @Column(name="thumbnail")
@@ -95,6 +103,9 @@ public class Image
   @Transient
   public boolean isEnabled() { return (getEnabled().booleanValue()); }
   
+  public void setMessage(Message m) { this.message = m; }
+  public Message getMessage() { return this.message; }
+  
   public void setUser(User u) { this.user = u; }
   public User getUser() { return this.user; }
    
@@ -112,21 +123,19 @@ public class Image
   public void setIpAddress(String ip) { this.ipAddress = new Inet(ip); }
   public String getIpAddress() { return this.ipAddress.getAddress(); }
   
+
   
+  public void setFileName(String str) { if (str != null) { this.fileName = StringUtils.truncate(str, 1024); } }
+  public String getFileName() { return this.fileName; }
+
   @Transient
-  public void setThumbnail(String d) 
+  public void generateThumbnail(byte[] d) 
   { 
     if (d == null) { this.thumbnail = null; return; }
-        
-    String[] s;
-    
-    if (d.startsWith("data:") && d.contains(",")) { s = d.split(","); d = s[1]; } 
-    
+                
     try 
     { 
-      byte[] img = Base64.getDecoder().decode(d); 
-      
-      ByteArrayInputStream bais = new ByteArrayInputStream(img);
+      ByteArrayInputStream bais = new ByteArrayInputStream(d);
       
       BufferedImage originalImage = ImageIO.read(bais);
       
@@ -148,29 +157,6 @@ public class Image
   @Transient
   public boolean hasThumbnail() { if (this.thumbnail != null) { return true; } return false; }
    
-  @Transient
-  public void setData(String d) 
-  { 
-    if (d == null) { this.data = null; return; }
-        
-    String[] s;
-    
-    if (d.startsWith("data:") && d.contains(",")) { s = d.split(","); d = s[1]; } 
-    
-    try 
-    { 
-      byte[] img = Base64.getDecoder().decode(d); 
-      
-      ByteArrayInputStream bais = new ByteArrayInputStream(img);
-      
-      BufferedImage originalImage = ImageIO.read(bais);
-            
-      if (originalImage != null) { this.data = img.clone(); }
-      
-      bais.close();
-    } 
-    catch(Exception e) { this.data = null; }
-  }
   public void setData(byte[] d) { this.data = (d == null) ? null : d.clone(); }
   public byte[] getData() { if (this.data != null) { return data; } return null; }
   @Transient
@@ -183,6 +169,7 @@ public class Image
     int result = 1;
     result = (prime * result) + ((getImageId() == null) ? 0 : getImageId().hashCode());
     result = (prime * result) + ((getEnabled() == null) ? 0 : getEnabled().hashCode());
+    result = (prime * result) + ((getMessage() == null) ? 0 : getMessage().hashCode());
     result = (prime * result) + ((getUser() == null) ? 0 : getUser().hashCode());
     result = (prime * result) + ((getIpAddress() == null) ? 0 : getIpAddress().hashCode());
     return result;
@@ -207,6 +194,7 @@ public class Image
     final StringBuilder builder = new StringBuilder();
     
     builder.append("Attachment [id=").append(imageId)
+           .append(", message=").append(message)
            .append(", user=").append(user)
            .append(", IP=").append(ipAddress)
            .append(", created=").append(createdOn)
