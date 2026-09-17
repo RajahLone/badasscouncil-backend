@@ -402,12 +402,8 @@ public class MessageController
           ObjectMapper mapper = new ObjectMapper();
           
           try { message = mapper.readValue(files[0].getBytes(), MessageShortPass.class); } catch (Exception e) { LOG.error(e.toString()); message = null; }
-
-          LOG.info("message -> " + files[0].getContentType());
         }
       }
-
-      LOG.info("n=" + files.length);
       
       if (room.hasPassword())
       {
