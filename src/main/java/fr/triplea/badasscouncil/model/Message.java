@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -38,6 +40,9 @@ public class Message
   @Column(name = "message_id", nullable = false)
   private Integer messageId;
 
+  @Enumerated(EnumType.STRING) 
+  private MessageType messageType;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="user_id", referencedColumnName="user_id")
   private User user;
@@ -62,6 +67,9 @@ public class Message
   public void setMessageId(Integer id) { this.messageId = id; }
   public Integer getMessageId() { return this.messageId; }
   
+  public void setMessageType(MessageType enu) { this.messageType = enu; }
+  public MessageType getMessageType() { return this.messageType; }
+
   public void setUser(User p) { this.user = p; }
   public User getUser() { return this.user; }
 

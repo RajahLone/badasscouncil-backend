@@ -33,6 +33,7 @@ import fr.triplea.badasscouncil.dto.NickNameOptionList;
 import fr.triplea.badasscouncil.dto.Pagination;
 import fr.triplea.badasscouncil.model.Image;
 import fr.triplea.badasscouncil.model.Message;
+import fr.triplea.badasscouncil.model.MessageType;
 import fr.triplea.badasscouncil.model.Room;
 import fr.triplea.badasscouncil.model.RoomState;
 import fr.triplea.badasscouncil.model.User;
@@ -287,9 +288,9 @@ public class MessageController
     return mlist; 
   }
 
-  @PostMapping(value = "/add/{room}/{last}")
+  @PostMapping(value = "/add/txt/{room}/{last}")
   @PreAuthorize("hasRole('USER')")
-  public List<MessageShort> addLine(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
+  public List<MessageShort> addText(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestBody(required = true) MessageShortPass message, final Authentication authentication)
   { 
     List<MessageShort> mlist = null;
 
@@ -357,6 +358,7 @@ public class MessageController
               Message m = new Message();
               
               m.setMessageId(null);
+              m.setMessageType(MessageType.TEXT);
               m.setRoom(room);
               m.setUser(found);
               m.setContent(ligne);
@@ -379,7 +381,7 @@ public class MessageController
     return mlist; 
   }
   
-  @PostMapping(value = "/img/{room}/{last}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "/add/img/{room}/{last}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('USER')")
   public List<MessageShort> addImages(@PathVariable(name="room") int r, @PathVariable("last") int l, @RequestParam(name="file") MultipartFile[] files, final Authentication authentication, HttpServletRequest request)
   { 
@@ -459,6 +461,7 @@ public class MessageController
             Message m = new Message();
             
             m.setMessageId(null);
+            m.setMessageType(MessageType.IMAGES);
             m.setRoom(room);
             m.setUser(found);
             m.setContent("");

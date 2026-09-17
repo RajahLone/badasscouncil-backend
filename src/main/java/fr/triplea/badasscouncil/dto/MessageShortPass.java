@@ -4,6 +4,7 @@ public class MessageShortPass
 {
   String createdOn;
   int messageId;
+  String messageType;
   String nickName;
   String content;
   int destId;
@@ -12,6 +13,7 @@ public class MessageShortPass
   
   public String getCreatedOn() { return createdOn; }
   public int getMessageId() { return messageId; }
+  public String getMessageType() { return messageType; }
   public String getNickName() { return nickName; }
   public String getContent() { return content; }
   public int getDestId() { return destId; }
@@ -20,6 +22,7 @@ public class MessageShortPass
   
   public void setCreatedOn(String createdOn) { this.createdOn = createdOn; }
   public void setMessageId(int messageId) { this.messageId = messageId; }
+  public void setMessageType(String messageType) { this.messageType = messageType; }
   public void setNickName(String nickName) { this.nickName = nickName; }
   public void setContent(String content) { this.content = content; }
   public void setDestId(int destId) { this.destId = destId; }
