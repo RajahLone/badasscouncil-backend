@@ -1,9 +1,10 @@
 package fr.triplea.badasscouncil.web.controller;
 
 
+import java.util.Arrays;
 import java.util.Base64;
 
-import org.apache.tika.mime.MediaType;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,15 +53,19 @@ public class ImageController
     { 
       int userId = userService.getUserId(authentication);
             
-      if ((userId == 0) || (found.userId() == userId) || (found.destId() == userId))
+      if ((found.destId() == 0) || (userId == 0) || (found.userId() == userId) || (found.destId() == userId))
       {
         userService.setLastActivityOn(authentication);
         
         StringBuffer sb = new StringBuffer();
         
-        sb.append("<img src=\"data:image/png;base64,");
+        sb.append("<img alt=\"");
+        sb.append(messageId);
+        sb.append("_");
+        sb.append(imageId);
+        sb.append("\" src=\"data:image/png;base64,");
         sb.append(Base64.getEncoder().encodeToString(found.data()));
-        sb.append("\" alt=\"\"/>");
+        sb.append("\"/>");
         
         return sb.toString();
       }
@@ -81,19 +86,29 @@ public class ImageController
     { 
       int userId = userService.getUserId(authentication);
             
-      if ((userId == 0) || (found.userId() == userId) || (found.destId() == userId))
+      if ((found.destId() == 0) || (userId == 0) || (found.userId() == userId) || (found.destId() == userId))
       {
-        userService.setLastActivityOn(authentication);
-
+        userService.setLastActivityOn(authentication);        
+       
         byte[] data = found.data();
         
-        Resource r = new ByteArrayResource(data);
+        byte[] head = new byte[1024]; Arrays.fill(head, (byte) 0);
         
+        System.arraycopy(data, 0, head, 0, Math.min(data.length, 1024));
+        
+        Tika tika = new Tika();
+        
+        String mime = tika.detect(head);
+        
+        if (mime == null) { mime = tika.detect(found.fileName()); }
+        
+        Resource r = new ByteArrayResource(data);
+
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "filename=\"" + found.fileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + found.fileName() + "\"")
                 .header(HttpHeaders.CONTENT_LENGTH, "" + data.length)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.OCTET_STREAM.toString())
+                .header(HttpHeaders.CONTENT_TYPE, mime)
                 .body(r); 
       }
     }
