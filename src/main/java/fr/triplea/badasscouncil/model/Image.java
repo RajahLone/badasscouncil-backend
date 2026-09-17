@@ -147,7 +147,14 @@ public class Image
       
       BufferedImage originalImage = ImageIO.read(bais);
 
-      BufferedImage tn = Thumbnails.of(originalImage).crop(Positions.CENTER).size(Math.min(160, originalImage.getWidth()), Math.min(160, originalImage.getHeight())).asBufferedImage();
+      // need to convert to ARGB, some pixels low encoding show black'n'white when thumbnailed
+      BufferedImage convertedImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+      convertedImage.getGraphics().drawImage(originalImage, 0, 0, null);
+      
+      BufferedImage tn = Thumbnails.of(convertedImage)
+                                   .crop(Positions.CENTER)
+                                   .size(Math.min(160, originalImage.getWidth()), Math.min(160, originalImage.getHeight()))
+                                   .asBufferedImage();
       
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       

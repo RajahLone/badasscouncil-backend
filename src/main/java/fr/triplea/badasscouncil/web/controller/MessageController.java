@@ -46,7 +46,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class MessageController 
 {
   
-  @SuppressWarnings("unused") 
+  //@SuppressWarnings("unused") 
   private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
   
   @Value("${password.salt}")
