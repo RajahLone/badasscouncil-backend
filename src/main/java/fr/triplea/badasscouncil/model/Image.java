@@ -146,8 +146,8 @@ public class Image
       ByteArrayInputStream bais = new ByteArrayInputStream(d);
       
       BufferedImage originalImage = ImageIO.read(bais);
-      
-      BufferedImage tn = Thumbnails.of(originalImage).crop(Positions.CENTER).size(160, 160).asBufferedImage();
+
+      BufferedImage tn = Thumbnails.of(originalImage).crop(Positions.CENTER).size(Math.min(160, originalImage.getWidth()), Math.min(160, originalImage.getHeight())).asBufferedImage();
       
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       
