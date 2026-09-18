@@ -28,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Integer>
   @NativeQuery("SELECT DISTINCT COUNT(u.*) AS nombre FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND UPPER(u.login_name) = :login")
   long count(@Param("login") String login);
   
+  @NativeQuery("SELECT DISTINCT CONCAT(u.nick_name, CASE WHEN LENGTH(u.group_name) > 0 THEN CONCAT(' / ', u.group_name) ELSE '' END) AS username FROM badasscouncil.users AS u WHERE u.enabled IS TRUE AND u.user_id IN (SELECT DISTINCT r.user_id FROM badasscouncil.refreshtoken AS r WHERE r.expiry_date > NOW()) ORDER BY username ")
+  List<String> getConnected();
+
   @NativeQuery("SELECT DISTINCT "
       + "COUNT(u.*) AS nombre "
       + "FROM badasscouncil.users AS u "

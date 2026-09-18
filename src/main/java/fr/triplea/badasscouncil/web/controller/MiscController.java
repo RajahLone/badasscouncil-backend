@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,6 +30,9 @@ import fr.triplea.badasscouncil.web.service.VariableService;
 @RequestMapping("/misc")
 public class MiscController 
 {
+  
+  @SuppressWarnings("unused") 
+  private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 
   @Autowired
   private VariableService variableService;
@@ -47,7 +52,7 @@ public class MiscController
   @Autowired
   private EmojiService emojiService;
 
-
+  
   @GetMapping(value = "/welcome")
   public ResponseEntity<HomeInformationTransfer> getWelcomeMessage() 
   { 
@@ -156,6 +161,17 @@ public class MiscController
       {
         return emojiService.getShortList();
       }
+    }
+         
+    return new ArrayList<String>(); 
+  }
+
+  @GetMapping(value = { "/users"})
+  public List<String> getUsers(final Authentication authentication) 
+  { 
+    if (authentication != null)
+    {
+      return userRepository.getConnected();
     }
          
     return new ArrayList<String>(); 

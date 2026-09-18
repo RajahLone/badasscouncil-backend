@@ -124,7 +124,7 @@ public class SecurityConfig
           .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(31536000))
           .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.SAME_ORIGIN))
           )
-        .sessionManagement(session -> session.maximumSessions(2).sessionRegistry(sessionRegistry()))
+        .sessionManagement(session -> session.maximumSessions(1).sessionRegistry(sessionRegistry()))
         ;
         
     return http.build();

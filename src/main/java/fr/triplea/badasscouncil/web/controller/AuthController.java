@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -188,7 +189,7 @@ public class AuthController
           
           String token = jwtTokenUtil.generateJwtToken(authentication);
           
-          refreshTokenService.deleteByNumeroParticipant(found.getUserId());
+          refreshTokenService.deleteByUserId(found.getUserId());
           
           RefreshToken refreshToken = refreshTokenService.createRefreshToken(found.getUserId());
                   
@@ -273,7 +274,7 @@ public class AuthController
     return ResponseEntity.ok(rtt);
   }
   
-  @PostMapping("/out")
+  @GetMapping("/out")
   public ResponseEntity<UserCredentials> signOut(final Authentication authentication)
   {
     if (authentication != null)
@@ -282,7 +283,7 @@ public class AuthController
 
       User found = userRepository.findByLoginName(authentication.getName());
       
-      if (found != null) { refreshTokenService.deleteByNumeroParticipant(found.getUserId()); }
+      if (found != null) { refreshTokenService.deleteByUserId(found.getUserId()); }
     }
 
     SecurityContextHolder.clearContext();
