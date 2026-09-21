@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -349,25 +350,48 @@ public class MessageController
 
           if (found.getNickName().equals(message.getNickName()) && granted)
           {
-            String ligne = message.getContent();
+            String line = message.getContent();
             
-            if (ligne == null) { ligne = ""; }
-            
-            if (!ligne.isBlank())
+            if (line == null) { line = ""; }
+                        
+            if (!line.isBlank())
             {
+              boolean ok = true;
+              
               Message m = new Message();
               
               m.setMessageId(null);
-              m.setMessageType(MessageType.TEXT);
+              
+              if (message.getMessageType().equals("URL")) 
+              { 
+                ok = false;
+                
+                m.setMessageType(MessageType.URL); 
+                
+                JSONObject o = new JSONObject(line);
+                
+                if (o != null) 
+                {  
+                  String name = o.getString("name");
+                  String link = o.getString("link");
+                  
+                  if ((name != null) && (link != null)) { name = name.trim(); link = link.trim(); if (!link.isEmpty()) { ok = true; } }
+                }
+              } 
+              else 
+              { 
+                m.setMessageType(MessageType.TEXT); 
+              }
+              
               m.setRoom(room);
               m.setUser(found);
-              m.setContent(ligne);
+              m.setContent(line);
               
               User dest = userRepository.findById(message.getDestId());
               
               if (dest != null) { m.setDest(dest); } else { m.setDest(null); }
               
-              messageRepository.saveAndFlush(m);
+              if (ok) { messageRepository.saveAndFlush(m); }
             }
             
             mlist = messageRepository.findNew(r, found.getUserId(), l);
