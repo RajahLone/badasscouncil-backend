@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.triplea.badasscouncil.dao.AttachmentRepository;
 import fr.triplea.badasscouncil.dao.QuoteRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dto.ApplicationInfo;
 import fr.triplea.badasscouncil.dto.CaptchaTransfer;
 import fr.triplea.badasscouncil.dto.HomeInformationTransfer;
 import fr.triplea.badasscouncil.dto.ItemCountTransfer;
@@ -53,6 +54,19 @@ public class MiscController
   private EmojiService emojiService;
 
   
+  @GetMapping(value = "/info")
+  public ResponseEntity<ApplicationInfo> getApplicationInfo() 
+  { 
+    ApplicationInfo ai = new ApplicationInfo();
+
+    ai.setVersion("1.0.0");
+    ai.setFramework("Java 17+ - Spring Boot 3.5.16");
+    ai.setDate("20260922");
+    ai.setAuthors(new String[] {"Rajah Lone"});
+    
+    return ResponseEntity.ok(ai); 
+  }
+ 
   @GetMapping(value = "/welcome")
   public ResponseEntity<HomeInformationTransfer> getWelcomeMessage() 
   { 
