@@ -28,6 +28,7 @@ import fr.triplea.badasscouncil.dao.ImageRepository;
 import fr.triplea.badasscouncil.dao.MessageRepository;
 import fr.triplea.badasscouncil.dao.RoomRepository;
 import fr.triplea.badasscouncil.dao.UserRepository;
+import fr.triplea.badasscouncil.dto.ImageIds;
 import fr.triplea.badasscouncil.dto.MessageShort;
 import fr.triplea.badasscouncil.dto.MessageShortPass;
 import fr.triplea.badasscouncil.dto.NickNameOptionList;
@@ -492,7 +493,7 @@ public class MessageController
 
             messageRepository.saveAndFlush(m);
 
-            StringBuffer sb = new StringBuffer();
+            List<Integer> imageIds = new ArrayList<Integer>();
             
             for (int f = 1; f < files.length; f++)
             {
@@ -514,15 +515,19 @@ public class MessageController
 
                   imageRepository.saveAndFlush(i);
 
-                  sb.append("img_" + i.getImageId());
-                  
-                  if (f < (files.length - 1)) { sb.append("|"); }
+                  imageIds.add(i.getImageId());
                 }
               } 
               catch (IOException e) { LOG.error(files[f].getName() + " -> " + e.toString()); }
             }
             
-            m.setContent(sb.toString());
+            ImageIds iis = new ImageIds(); 
+            
+            iis.setImageIds(imageIds.toArray(Integer[]::new));
+            
+            JSONObject o = new JSONObject(iis);
+            
+            m.setContent(o.toString());
             
             messageRepository.saveAndFlush(m);
             
