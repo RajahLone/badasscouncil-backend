@@ -343,7 +343,7 @@ public class AuthController
   
     long max = variableService.getLong("Quota", "MEMBERS_COUNT", 42);
 
-    if (max > cur) { pt.setError(messageSource.getMessage("account.subscribe.quota.reached", null, locale)); return ResponseEntity.ok(pt); }
+    if (cur > max) { pt.setError(messageSource.getMessage("account.subscribe.quota.reached", null, locale)); return ResponseEntity.ok(pt); }
     
     boolean admin = false;
 
