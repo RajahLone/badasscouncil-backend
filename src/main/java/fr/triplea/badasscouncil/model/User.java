@@ -226,7 +226,7 @@ public class User
   public void setDisplayContactDetails(boolean b) { this.displayContactDetails = Boolean.valueOf(b); }
   public Boolean getDisplayContactDetails() { return this.displayContactDetails; }
   @Transient
-  public boolean mustDisplayContactDetails() { return (getPasswordExpired().booleanValue()); }
+  public boolean mustDisplayContactDetails() { return (getDisplayContactDetails().booleanValue()); }
 
   public void setAddress(String str) { if (str != null) { this.address = StringUtils.truncate(str, 256); } }
   public String getAddress() { return this.address; }
